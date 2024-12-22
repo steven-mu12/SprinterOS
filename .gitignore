@@ -1,0 +1,6 @@
+.DS_Store
+.metadata/
+boot/.cproject
+boot/.project
+boot/.settings
+boot/Debug/
