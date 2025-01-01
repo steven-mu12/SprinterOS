@@ -17,14 +17,6 @@
 
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  ******************************************************************************
  */
 
@@ -41,8 +33,8 @@
 #define CLEAR_BITS_MASK(MASK, BIT)			(~(MASK << BIT)) 			/* use & with reg */
 #define INSERT_BITS_MASK(MASK, BIT)			(MASK << BIT)	 			/* use | with reg */
 #define SET_BITS(INPUT, BIT, NEW, MASK)		(INPUT = ( (INPUT & (CLEAR_BITS_MASK(MASK, BIT))) | \
-										 	 	 	   (INSERT_BITS_MASK(NEW, BIT)) ) \
-											)
+                                                       (INSERT_BITS_MASK(NEW, BIT)) ) \
+                                            )
 
 /* GENERAL DEFINITIONS */
 #define HIGH							1
@@ -51,5 +43,6 @@
 /* MMIO ADDRESSES */
 #define FLASH_ADDRESS					0x40023C00
 #define RCC_ADDRESS						0x40023800
+#define GPIO_BASE_ADDRESS				0x40020000
 
 #endif
