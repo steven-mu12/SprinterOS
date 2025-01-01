@@ -29,7 +29,7 @@
 
 /* GPIO structure */
 struct gpio {
-	volatile uint32_t MODER, OTYPER, OSPEEDR, PUPDR, IDR, ODR, BSRR, LCKR, AFR[2];
+    volatile uint32_t MODER, OTYPER, OSPEEDR, PUPDR, IDR, ODR, BSRR, LCKR, AFR[2];
 };
 #define GPIO_PORT_INIT(port)		(struct gpio *)(GPIO_BASE_ADDRESS + 0x400*port)
 /* Basically, (struct gpio *) literally just casts the address behind it to the address
@@ -38,12 +38,12 @@ struct gpio {
 
 /* GPIO macros */
 #define PIN(bank, num) 		((((port) - 'A') << 8) | (num))		/* makes a uint16_t, top 8 being port ASCII - ASCII
-																   of A (means A=0, B=1..) bottom 8 being pin num */
+                                                                   of A (means A=0, B=1..) bottom 8 being pin num */
 #define PINNUM(pin) 		((pin & 0xFF))                      /* extract pin number from a pin */
 #define PINPORT(pin) 		((pin >> 8))                        /* extract port from a pin */
 
 enum {GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF,			/* INPUT = 0, OUTPUT = 1 ... according to manual */
-	  GPIO_MODE_ANALOG};
+      GPIO_MODE_ANALOG};
 
 
 /* User Functions */
