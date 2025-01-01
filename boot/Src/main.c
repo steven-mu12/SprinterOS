@@ -34,8 +34,7 @@ int main(void) {
     // switch the SYSCLK to PLL to use 216MHz
     sysclk_set_216mhz();
 
-    // UART utility
-
+    // GPIO TEST
 
     /* Loop forever */
     for(;;);

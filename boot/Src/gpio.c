@@ -59,8 +59,10 @@ void gpio_pinmode(uint16_t pin, uint8_t mode) {
     switch(mode) {
         case GPIO_MODE_INPUT:
             gpio_output_config(pin, GPIO);
+            break;
         case GPIO_MODE_OUTPUT:
             gpio_input_config(pin, GPIO);
+            break;
         case GPIO_MODE_AF:
             return;									/* way too specific depending on peripheral to do here */
         case GPIO_MODE_ANALOG:

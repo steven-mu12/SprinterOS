@@ -37,7 +37,7 @@ struct gpio {
    with whatever's there, and in this case we just split data into 32 bit variables */
 
 /* GPIO macros */
-#define PIN(bank, num) 		((((port) - 'A') << 8) | (num))		/* makes a uint16_t, top 8 being port ASCII - ASCII
+#define PIN(port, num) 		((((port) - 'A') << 8) | (num))		/* makes a uint16_t, top 8 being port ASCII - ASCII
                                                                    of A (means A=0, B=1..) bottom 8 being pin num */
 #define PINNUM(pin) 		((pin & 0xFF))                      /* extract pin number from a pin */
 #define PINPORT(pin) 		((pin >> 8))                        /* extract port from a pin */
