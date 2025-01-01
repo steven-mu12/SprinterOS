@@ -28,13 +28,13 @@
 /* SINGLE BITWISE OPERATION MACROS */
 #define SET_BITMASK(BIT)					(1U << BIT)					/* use | with reg */
 #define RESET_BITMASK(BIT)					(~(1U << BIT))				/* use & with reg */
-#define READ_BIT(INPUT, BIT)					(((INPUT) & (1U << BIT)) >> BIT)
+#define READ_BIT(INPUT, BIT)				(((INPUT) & (1U << BIT)) >> BIT)
 
 #define CLEAR_BITS_MASK(MASK, BIT)			(~(MASK << BIT)) 			/* use & with reg */
 #define INSERT_BITS_MASK(MASK, BIT)			(MASK << BIT)	 			/* use | with reg */
 #define SET_BITS(INPUT, BIT, NEW, MASK)		(INPUT = ( (INPUT & (CLEAR_BITS_MASK(MASK, BIT))) | \
-										 	 	 	   (INSERT_BITS_MASK(NEW, BIT)) ) \
-											)
+                                                       (INSERT_BITS_MASK(NEW, BIT)) ) \
+                                            )
 
 /* GENERAL DEFINITIONS */
 #define HIGH							1

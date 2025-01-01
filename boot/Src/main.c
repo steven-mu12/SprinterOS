@@ -30,14 +30,13 @@
 //  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 //#endif
 
-int main(void)
-{
-	// switch the SYSCLK to PLL to use 216MHz
-	sysclk_set_216mhz();
+int main(void) {
+    // switch the SYSCLK to PLL to use 216MHz
+    sysclk_set_216mhz();
 
-	// UART utility
+    // UART utility
 
 
     /* Loop forever */
-	for(;;);
+    for(;;);
 }

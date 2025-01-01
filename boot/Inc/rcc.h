@@ -35,7 +35,7 @@ struct rcc {
       RESERVED6[2], SSCGR, PLLI2SCFGR;
 };
 #define RCC ((struct rcc *) RCC_ADDRESS)		/* this is the location of RCC, with all registers being 32 bits
-												                       when you call any registers, it'll auto add 0x04 to offset */
+                                               when you call any registers, it'll auto add 0x04 to offset */
 
 /* helper functions */
 int sysclk_set_216mhz(void);				/* set system clock to 84MHz via PLL */
