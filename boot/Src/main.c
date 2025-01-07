@@ -21,20 +21,29 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 #include "stm32f7.h"
 #include "rcc.h"
 #include "flash.h"
 #include "gpio.h"
+#include "uart.h"
 
 //#if !defined(__SOFT_FP__) && defined(__ARM_FP)
 //  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 //#endif
 
-int main(void) {
-    // switch the SYSCLK to PLL to use 216MHz
-    sysclk_set_216mhz();
+/* CONFIGURATIONS */
+#define UART_COMM_PORT		1
 
-    // GPIO TEST
+
+int main(void) {
+
+    // switch the SYSCLK to PLL to use 180MHz
+    sysclk_set_180mhz();
+
+    // turn on UART output
+    uart_init(UART_COMM_PORT);
+    uart_out("[ UART ]: UART initialized");
 
     /* Loop forever */
     for(;;);

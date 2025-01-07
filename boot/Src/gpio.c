@@ -87,7 +87,7 @@ int gpio_digital_write(uint16_t pin, uint8_t value) {
     }
 
     // check if ODR reflects the changes
-    for (int i=0; i<5; i++);						/* tiny 5 clock cycle delay */
+    for (int i=0; i<5; i++);						/* tiny 10 clock cycle delay */
 
     if (READ_BIT(GPIO->ODR, pin_num) != value) {	/* check ODR register */
         return 1;

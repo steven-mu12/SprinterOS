@@ -24,6 +24,7 @@
 #define __STM32F7_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 /* SINGLE BITWISE OPERATION MACROS */
 #define SET_BITMASK(BIT)					(1U << BIT)					/* use | with reg */
@@ -44,5 +45,6 @@
 #define FLASH_ADDRESS					0x40023C00
 #define RCC_ADDRESS						0x40023800
 #define GPIO_BASE_ADDRESS				0x40020000
+#define UART_1_BASE						0x40011000
 
 #endif
