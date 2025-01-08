@@ -17,5 +17,6 @@ int uart_out(char* string);
 
 /* helper function - do not use directly */
 int uart_write_char(char data);
+int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_t AF_ID_RX);
 
 #endif
