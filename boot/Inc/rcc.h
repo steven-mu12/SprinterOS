@@ -24,6 +24,7 @@
 #define __RCC_H__
 
 #include <stdint.h>
+#include <stddef.h>
 #include "stm32f7.h"
 
 /* RCC structure */
@@ -38,7 +39,7 @@ struct rcc {
                                                when you call any registers, it'll auto add 0x04 to offset */
 
 /* helper functions */
-int sysclk_set_216mhz(void);				/* set system clock to 84MHz via PLL */
+int sysclk_set_180mhz(void);				/* set system clock to 180MHz via PLL */
 int sysclk_test(void);							/* system clock speed test */
 
 #endif

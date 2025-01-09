@@ -1,8 +1,8 @@
 /**
  ******************************************************************************
- * @file           : main.c
+ * @file           : uart.h
  * @author         : Steven Mu
- * @summary		   : Main bootloader entrypoint
+ * @summary		   : UART Headers
  ******************************************************************************
  * MIT License
 
@@ -20,31 +20,25 @@
  ******************************************************************************
  */
 
+#ifndef __UART_H__
+#define __UART_H__
+
 #include <stdint.h>
-#include <stddef.h>
 #include "stm32f7.h"
-#include "rcc.h"
-#include "flash.h"
 #include "gpio.h"
-#include "uart.h"
 
-//#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-//  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-//#endif
+/* UART structure */
+struct uart {
+	volatile uint32_t CR1, CR2, CR3, BRR, RTOR, RQR, ISR, ICR, RDR, TDR;
+};
+#define UART_1 ((struct uart *) UART_1_BASE)
 
-/* CONFIGURATIONS */
-#define UART_COMM_PORT		1
+/* user functions */
+int uart_init(int uart_id);
+int uart_out(char* string);
 
+/* helper function - do not use directly */
+int uart_write_char(char data);
+int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_t AF_ID_RX);
 
-int main(void) {
-
-    // switch the SYSCLK to PLL to use 180MHz
-    sysclk_set_180mhz();
-
-    // turn on UART output
-    uart_init(UART_COMM_PORT);
-    uart_out("[ UART ]: UART initialized");
-
-    /* Loop forever */
-    for(;;);
-}
+#endif
