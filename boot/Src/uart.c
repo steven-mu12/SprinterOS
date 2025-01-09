@@ -1,8 +1,8 @@
 /**
  ******************************************************************************
- * @file           : rcc.c
+ * @file           : gpio.c
  * @author         : Steven Mu
- * @summary		   : Reset & Clock Controller Functionalities
+ * @summary		   : UART Functionalities
  ******************************************************************************
  * MIT License
 
