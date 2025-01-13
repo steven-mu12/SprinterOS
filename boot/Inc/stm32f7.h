@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 
 /* SINGLE BITWISE OPERATION MACROS */
 #define SET_BITMASK(BIT)					(1U << BIT)					/* use | with reg */
