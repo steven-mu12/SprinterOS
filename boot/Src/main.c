@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include "stm32f7.h"
 #include "rcc.h"
 #include "flash.h"
@@ -41,9 +42,10 @@ int main(void) {
     // switch the SYSCLK to PLL to use 180MHz
     sysclk_set_180mhz();
 
-    // turn on UART output
+    // turn on UART output (hard coded to USART_1 for now)
     uart_init(UART_COMM_PORT);
     uart_out("[ UART ]: UART initialized");
+    uart_out("[ UART ]: UART Used: %i", 1);
 
     /* Loop forever */
     for(;;);

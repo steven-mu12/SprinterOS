@@ -21,14 +21,17 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include "stm32f7.h"
 #include "rcc.h"
 #include "flash.h"
 #include "gpio.h"
 #include "uart.h"
 
-/* HELPER FUNCTION - do not use directly */
+/* HELPER FUNCTIONS - do not use directly */
+
 int uart_write_char(char data) {
 
 	while (READ_BIT(UART_1->ISR, 7) == 0);			/* check TXE till high */
@@ -37,6 +40,59 @@ int uart_write_char(char data) {
 
 	return 0;
 }
+
+
+int uart_output_hex(int input) {
+
+	char hex_char = 0;
+	uint32_t value = 0;
+
+	// output the hex 0x
+	uart_write_char('0');
+	uart_write_char('x');
+
+	// mask for the first 4 bits, then next, then next
+	for (int i = 28; i >= 0; i-=4) {
+		value = (input >> i) & 0x0F;						/* get the value of the 4 bits we're on */
+
+		if ((i == 28) && ((value & 0x08) == 0x08)) {		/* catch the sign bit if it's the first nib */
+			uart_write_char('-');
+			value -= 0x08;
+		}
+
+		if (value < 10) {									/* depending on value, print hex char */
+			hex_char = '0' + value;
+		} else {
+			hex_char = 'A' + (value - 10);
+		}
+		uart_write_char(hex_char);
+	}
+
+	return 0;
+}
+
+
+int uart_output_int(int input) {
+	char char_buffer[12];
+	snprintf(char_buffer, sizeof(char_buffer), "%d", input);
+
+	for (int i = 0; char_buffer[i] != '\0'; i++) {
+		uart_write_char(char_buffer[i]);
+	}
+
+	return 0;
+}
+
+
+int uart_output_str(char* input) {
+	while (*input != '\0') {
+		uart_write_char(*input);
+		input++;
+	}
+
+	return 0;
+}
+
 
 int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_t AF_ID_RX) {
 
@@ -49,10 +105,8 @@ int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_
 	gpio_pinmode(RX_PIN, GPIO_MODE_AF);
 
 	// determine if AFR high/low needs to be used
-	uint8_t target_afr_tx = 0;
-	uint8_t target_bit_tx = 0;
-	uint8_t target_afr_rx = 0;
-	uint8_t target_bit_rx = 0;
+	uint8_t target_afr_tx = 0, target_bit_tx = 0,
+			target_afr_rx = 0, target_bit_rx = 0;
 
 	if (PINNUM(TX_PIN) >= 8) {
 		target_afr_tx = 1;
@@ -85,7 +139,9 @@ int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_
 	return 0;
 }
 
+
 /* USER FUNCTIONS */
+
 int uart_init(int uart_id) {
 
 	// only support for UART 1
@@ -123,7 +179,11 @@ int uart_init(int uart_id) {
 }
 
 
-int uart_out(char* string) {
+int uart_out(char* string, ...) {
+
+	// set up argument list
+	va_list args;
+	va_start(args, string);
 
 	if (string == NULL) {
 		return 1;
@@ -131,14 +191,32 @@ int uart_out(char* string) {
 
 	// break up the string one by one
 	while (*string != '\0') {
-		uart_write_char(*string);				/* output the first char string is pointing to */
-		string += 1;							/* since string is a char, adding 1 to a pointer moves it over
-							   	   	   	   	   	   by a character */
+
+		// catch the replacements
+		if (*string == '%') {
+			string++;
+			if (*string == 'h') {
+				uart_output_hex(va_arg(args, int));
+			} else if (*string == 'd') {
+				uart_output_int(va_arg(args, int));
+			} else if (*string == 's') {
+				uart_output_str(va_arg(args, char*));
+			}
+			else {
+				return 1;
+			}
+		} else {
+			uart_write_char(*string);						/* output the first char string is pointing to */
+		}
+
+		string++;										/* increment character pointer by sizeof(char) */
 	}
 
-	// write the EOL character
-	char end_line = '\n';
-	uart_write_char(end_line);
+	// write the NEWL and CARRIAGE RET character
+	char new_line = '\r';
+	uart_write_char(new_line);
+	new_line = '\n';
+	uart_write_char(new_line);
 
 	// wait for TC to get pulled high
 	while ((READ_BIT(UART_1->ISR, 6) == 0));
