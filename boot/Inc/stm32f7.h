@@ -35,8 +35,10 @@
 #define CLEAR_BITS_MASK(MASK, BIT)			(~(MASK << BIT)) 			/* use & with reg */
 #define INSERT_BITS_MASK(MASK, BIT)			(MASK << BIT)	 			/* use | with reg */
 #define SET_BITS(INPUT, BIT, NEW, MASK)		(INPUT = ( (INPUT & (CLEAR_BITS_MASK(MASK, BIT))) | \
-                                                       (INSERT_BITS_MASK(NEW, BIT)) ) \
+                                                       (INSERT_BITS_MASK(NEW, BIT)) \
+													 ) \
                                             )
+#define READ_BITS(INPUT, BIT, MASK)			((INPUT & (MASK << BIT)) >> BIT)
 
 /* GENERAL DEFINITIONS */
 #define HIGH							1
@@ -47,5 +49,6 @@
 #define RCC_ADDRESS						0x40023800
 #define GPIO_BASE_ADDRESS				0x40020000
 #define UART_1_BASE						0x40011000
+#define IWDG_BASE                       0x40003000
 
 #endif
