@@ -55,11 +55,6 @@ int uart_output_hex(int input) {
 	for (int i = 28; i >= 0; i-=4) {
 		value = (input >> i) & 0x0F;						/* get the value of the 4 bits we're on */
 
-		if ((i == 28) && ((value & 0x08) == 0x08)) {		/* catch the sign bit if it's the first nib */
-			uart_write_char('-');
-			value -= 0x08;
-		}
-
 		if (value < 10) {									/* depending on value, print hex char */
 			hex_char = '0' + value;
 		} else {
@@ -203,7 +198,7 @@ int uart_out(char* string, ...) {
 				uart_output_str(va_arg(args, char*));
 			}
 			else {
-				return 1;
+				break;
 			}
 		} else {
 			uart_write_char(*string);						/* output the first char string is pointing to */

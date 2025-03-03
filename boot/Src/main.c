@@ -28,6 +28,7 @@
 #include "flash.h"
 #include "gpio.h"
 #include "uart.h"
+#include "iwdg.h"
 
 //#if !defined(__SOFT_FP__) && defined(__ARM_FP)
 //  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -39,14 +40,25 @@
 
 int main(void) {
 
-    // switch the SYSCLK to PLL to use 180MHz
+    // switch the SYSCLK to HSI->PLL to use 180MHz
     sysclk_set_180mhz();
 
     // turn on UART output (hard coded to USART_1 for now)
     uart_init(UART_COMM_PORT);
     uart_out("[ UART ]: UART initialized");
-    uart_out("[ UART ]: UART Used: %i", 1);
+    uart_out("[ UART ]: UART Used: %d", 1);
 
-    /* Loop forever */
-    for(;;);
+    // initialize watchdog timer
+    if (iwdg_init()) {
+    	uart_out("[ IWDG ]: Internal Watchdog Timer initialization Failed");
+    } else {
+    	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
+    }
+
+    /* loop forever */
+    while (1) {
+    	if (!iwdg_reset()) {
+    		uart_out("[ IWDG ]: IWDG Reset Occured");
+    	}
+    }
 }

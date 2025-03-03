@@ -1,5 +1,6 @@
 .DS_Store
 .metadata/
+.vscode
 boot/.cproject
 boot/.project
 boot/.settings
