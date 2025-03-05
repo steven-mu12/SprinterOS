@@ -35,41 +35,27 @@ int iwdg_init(void) {
 	while (!READ_BIT(RCC->CSR, 1));
 
 	// init the IWDG by writing special code to KR
-	SET_BITS(IWDG->KR, 0, 0xCCCC, 0xFFFF);
-	SET_BITS(IWDG->KR, 0, 0x5555, 0xFFFF);
+	IWDG->KR = 0xCCCC;
+	IWDG->KR = 0x5555;
 
-	// set the prescaler to get ~ a 500ms expiration
-	while (READ_BIT(IWDG->SR, 1));
-	if (READ_BIT(IWDG->SR, 0)) {
-		SET_BITS(IWDG->PR, 0, 0x03, 0x07);
-	}
+	// set the prescaler to get ~ a 1000ms expiration
+	while (IWDG->SR & 0x03);
 
-	// write the reload register
-	while (READ_BIT(IWDG->SR, 1));
-	if (READ_BIT(IWDG->SR, 1) == 0) {
-		SET_BITS(IWDG->RLR, 0, 0x3E8, 0x0FFF);
+	SET_BITS(IWDG->PR, 0, 0x03, 0x02);
+	SET_BITS(IWDG->RLR, 0, 0x3E8, 0x0FFF);
 
-		// wait for SR to be updated
-		while (READ_BITS(IWDG->SR, 0, 0xFFFFFFFF) != 0x00000000);
-	}
+	// wait for SR to be updated
+	while (IWDG->SR & 0x03);
 
 	// start the watchdog
-	SET_BITS(IWDG->KR, 0, 0xAAAA, 0xFFFF);
+	IWDG->KR = 0xAAAA;
 
 	return 0;
 }
 
 
 int iwdg_reset(void) {
-
 	// write the reload register
-	while (READ_BIT(IWDG->SR, 1));
-	if (READ_BIT(IWDG->SR, 1) == 0) {
-		SET_BITS(IWDG->RLR, 0, 0x3E8, 0x0FFF);
-
-		// wait for SR to be updated
-		while (READ_BITS(IWDG->SR, 0, 0xFFFFFFFF) != 0x00000000);
-	}
-
+	IWDG->KR = 0xAAAA;
 	return 0;
 }

@@ -60,5 +60,8 @@ int main(void) {
     	if (!iwdg_reset()) {
     		uart_out("[ IWDG ]: IWDG Reset Occured");
     	}
+
+    	int i = 0;
+    	while (i < 3000000) {i++;}
     }
 }
