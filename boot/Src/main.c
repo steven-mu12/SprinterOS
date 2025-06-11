@@ -15,53 +15,57 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
 
- * The above copyright notice and this permission notice shall be included in all
+ * The above copyright notice and this permission notice shall be included in
+ all
  * copies or substantial portions of the Software.
  ******************************************************************************
  */
 
-#include <stdint.h>
-#include <stddef.h>
-#include <stdarg.h>
-#include "stm32f7.h"
-#include "rcc.h"
 #include "flash.h"
 #include "gpio.h"
-#include "uart.h"
 #include "iwdg.h"
+#include "rcc.h"
+#include "stm32f7.h"
+#include "uart.h"
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
 
-//#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-//  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-//#endif
+// #if !defined(__SOFT_FP__) && defined(__ARM_FP)
+//   #warning "FPU is not initialized, but the project is compiling for an FPU.
+//   Please initialize the FPU before use."
+// #endif
 
 /* CONFIGURATIONS */
-#define UART_COMM_PORT		1
+#define UART_COMM_PORT 1
 
+int main(void)
+{
 
-int main(void) {
+	// switch the SYSCLK to HSI->PLL to use 180MHz
+	sysclk_set_180mhz();
 
-    // switch the SYSCLK to HSI->PLL to use 180MHz
-    sysclk_set_180mhz();
+	// turn on UART output (hard coded to USART_1 for now)
+	uart_init(UART_COMM_PORT);
+	uart_out("[ UART ]: UART initialized");
+	uart_out("[ UART ]: UART Used: %d", 1);
 
-    // turn on UART output (hard coded to USART_1 for now)
-    uart_init(UART_COMM_PORT);
-    uart_out("[ UART ]: UART initialized");
-    uart_out("[ UART ]: UART Used: %d", 1);
+	// initialize watchdog timer
+	if (iwdg_init()) {
+		uart_out("[ IWDG ]: Internal Watchdog Timer initialization Failed");
+	} else {
+		uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
+	}
 
-    // initialize watchdog timer
-    if (iwdg_init()) {
-    	uart_out("[ IWDG ]: Internal Watchdog Timer initialization Failed");
-    } else {
-    	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
-    }
+	/* loop forever */
+	while (1) {
+		if (!iwdg_reset()) {
+			uart_out("[ IWDG ]: IWDG Reset Occured");
+		}
 
-    /* loop forever */
-    while (1) {
-    	if (!iwdg_reset()) {
-    		uart_out("[ IWDG ]: IWDG Reset Occured");
-    	}
-
-    	int i = 0;
-    	while (i < 3000000) {i++;}
-    }
+		int i = 0;
+		while (i < 3000000) {
+			i++;
+		}
+	}
 }

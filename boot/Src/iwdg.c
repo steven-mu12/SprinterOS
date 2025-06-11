@@ -15,37 +15,41 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
 
- * The above copyright notice and this permission notice shall be included in all
+ * The above copyright notice and this permission notice shall be included in
+ all
  * copies or substantial portions of the Software.
  ******************************************************************************
  */
 
-#include <stdint.h>
-#include "stm32f7.h"
-#include "rcc.h"
 #include "iwdg.h"
-
+#include "rcc.h"
+#include "stm32f7.h"
+#include <stdint.h>
 
 /* USER FUNCTIONS */
 
-int iwdg_init(void) {
+int iwdg_init(void)
+{
 
 	// init the LSI oscillator and wait for stable
 	SET_BITS(RCC->CSR, 0, 0x01, 0x01);
-	while (!READ_BIT(RCC->CSR, 1));
+	while (!READ_BIT(RCC->CSR, 1))
+		;
 
 	// init the IWDG by writing special code to KR
 	IWDG->KR = 0xCCCC;
 	IWDG->KR = 0x5555;
 
 	// set the prescaler to get ~ a 1000ms expiration
-	while (IWDG->SR & 0x03);
+	while (IWDG->SR & 0x03)
+		;
 
 	SET_BITS(IWDG->PR, 0, 0x03, 0x02);
 	SET_BITS(IWDG->RLR, 0, 0x3E8, 0x0FFF);
 
 	// wait for SR to be updated
-	while (IWDG->SR & 0x03);
+	while (IWDG->SR & 0x03)
+		;
 
 	// start the watchdog
 	IWDG->KR = 0xAAAA;
@@ -53,8 +57,8 @@ int iwdg_init(void) {
 	return 0;
 }
 
-
-int iwdg_reset(void) {
+int iwdg_reset(void)
+{
 	// write the reload register
 	IWDG->KR = 0xAAAA;
 	return 0;

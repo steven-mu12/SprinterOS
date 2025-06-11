@@ -15,27 +15,28 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
 
- * The above copyright notice and this permission notice shall be included in all
+ * The above copyright notice and this permission notice shall be included in
+ all
  * copies or substantial portions of the Software.
  ******************************************************************************
  */
 #ifndef __IWDG_H__
 #define __IWDG_H__
 
-#include <stdint.h>
-#include "stm32f7.h"
 #include "rcc.h"
+#include "stm32f7.h"
+#include <stdint.h>
 
 /* IWDG structure */
 struct iwdg {
 	volatile uint32_t KR, PR, RLR, SR, WINR;
 };
-#define IWDG ((struct iwdg *) IWDG_BASE)
+#define IWDG ((struct iwdg*)IWDG_BASE)
 
 /* User Functions */
 int iwdg_init(void);
 int iwdg_reset(void);
-//int iwdg_bypass(void);
+// int iwdg_bypass(void);
 
 /* Helper Functions - DO NOT USE DIRECTLY */
 

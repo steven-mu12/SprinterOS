@@ -15,7 +15,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
 
- * The above copyright notice and this permission notice shall be included in all
+ * The above copyright notice and this permission notice shall be included in
+ all
  * copies or substantial portions of the Software.
  ******************************************************************************
  */
@@ -26,13 +27,13 @@
 #include <stdint.h>
 
 typedef struct {
-    uint16_t task_id;
-    uint8_t priority;          
-    uint32_t estimated_time;   
-    uint32_t arrival_time;     
-    uint8_t state;             
-    void (*task_function)(void *args);
-    void *task_arg;
+	uint16_t task_id;
+	uint8_t priority;
+	uint32_t estimated_time;
+	uint32_t arrival_time;
+	uint8_t state;
+	void (*task_function)(void* args);
+	void* task_arg;
 } PCB_t;
 
 /* definitions */
@@ -42,8 +43,8 @@ typedef struct {
 
 /* User Functions */
 void scheduler_init(void);
-void scheduler_add_task(PCB_t *task);
-PCB_t *scheduler_get_next_task(void);
+void scheduler_add_task(PCB_t* task);
+PCB_t* scheduler_get_next_task(void);
 // void scheduler_periodic_update(void); (IMPLEMENT THIS)
 
-#endif 
+#endif
