@@ -37,9 +37,7 @@
 /* CONFIGURATIONS */
 #define UART_COMM_PORT		1
 
-
 int main(void) {
-
     // switch the SYSCLK to HSI->PLL to use 180MHz
     sysclk_set_180mhz();
 

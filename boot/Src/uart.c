@@ -30,10 +30,12 @@
 #include "gpio.h"
 #include "uart.h"
 
-/* HELPER FUNCTIONS - do not use directly */
-
+/**
+ * @brief Helper Wrapper Functions
+ * @note Do not directly use
+ */
+//! Write a character to UART
 int uart_write_char(char data) {
-
 	while (READ_BIT(UART_1->ISR, 7) == 0);			/* check TXE till high */
 	UART_1->TDR = (data & 0xFF);					/* write data into TDR */
 	while (READ_BIT(UART_1->ISR, 7) == 0);			/* check TXE & TC to be high */
@@ -41,9 +43,8 @@ int uart_write_char(char data) {
 	return 0;
 }
 
-
+//! Output hex type - Wrapper for uart_write_char()
 int uart_output_hex(int input) {
-
 	char hex_char = 0;
 	uint32_t value = 0;
 
@@ -53,9 +54,8 @@ int uart_output_hex(int input) {
 
 	// mask for the first 4 bits, then next, then next
 	for (int i = 28; i >= 0; i-=4) {
-		value = (input >> i) & 0x0F;						/* get the value of the 4 bits we're on */
-
-		if (value < 10) {									/* depending on value, print hex char */
+		value = (input >> i) & 0x0F;				/* get value of the 4 bits we're on */
+		if (value < 10) {							/* depends on value, print hex char */
 			hex_char = '0' + value;
 		} else {
 			hex_char = 'A' + (value - 10);
@@ -66,7 +66,7 @@ int uart_output_hex(int input) {
 	return 0;
 }
 
-
+//! Output int type - Wrapper for uart_write_char()
 int uart_output_int(int input) {
 	char char_buffer[12];
 	snprintf(char_buffer, sizeof(char_buffer), "%d", input);
@@ -78,7 +78,7 @@ int uart_output_int(int input) {
 	return 0;
 }
 
-
+//! Output string type - Wrapper for uart_write_char()
 int uart_output_str(char* input) {
 	while (*input != '\0') {
 		uart_write_char(*input);
@@ -88,9 +88,8 @@ int uart_output_str(char* input) {
 	return 0;
 }
 
-
+//! Set GPIO up for UART
 int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_t AF_ID_RX) {
-
 	// set up the GPIO pins themselves
 	struct gpio *TX_GPIO = GPIO_PORT_INIT(PINPORT(TX_PIN));
 	struct gpio *RX_GPIO = GPIO_PORT_INIT(PINPORT(RX_PIN));
@@ -135,10 +134,11 @@ int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_
 }
 
 
-/* USER FUNCTIONS */
-
+/**
+ * @brief User Functions
+ */
+//! Initialize UART before run
 int uart_init(int uart_id) {
-
 	// only support for UART 1
 	if (uart_id == 1) {
 		RCC->APB2ENR |= SET_BITMASK(4);
@@ -173,9 +173,8 @@ int uart_init(int uart_id) {
 	return 0;
 }
 
-
+//! Output something to UART
 int uart_out(char* string, ...) {
-
 	// set up argument list
 	va_list args;
 	va_start(args, string);
@@ -201,10 +200,10 @@ int uart_out(char* string, ...) {
 				break;
 			}
 		} else {
-			uart_write_char(*string);						/* output the first char string is pointing to */
+			uart_write_char(*string);			/* output the first char string is pointing to */
 		}
 
-		string++;										/* increment character pointer by sizeof(char) */
+		string++;								/* increment character pointer by sizeof(char) */
 	}
 
 	// write the NEWL and CARRIAGE RET character
