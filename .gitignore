@@ -1,8 +1,4 @@
-.DS_Store
-.metadata/
-.vscode
-boot/.cproject
-boot/.project
-boot/.settings
+.*
 boot/Debug/
 boot/boot Debug.launch
+boot/build/*

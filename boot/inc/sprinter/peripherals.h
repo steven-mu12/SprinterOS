@@ -1,12 +1,12 @@
 /**
  ******************************************************************************
- * @file           : iwdg.h
+ * @file           : peripherals.h
  * @author         : Steven Mu
- * @summary		   : Independent Watchdog Timer Header
+ * @summary		   : File to include all sprinter peripheral drivers
  ******************************************************************************
  * MIT License
 
- * Copyright (c) 2024 Steven Mu
+ * Copyright (c) 2025 Steven Mu
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,24 +19,13 @@
  * copies or substantial portions of the Software.
  ******************************************************************************
  */
-#ifndef __IWDG_H__
-#define __IWDG_H__
 
-#include <stdint.h>
-#include "stm32f7.h"
-#include "rcc.h"
+#ifndef __PERIPHERALS_H__
+#define __PERIPHERALS_H__
 
-/* IWDG structure */
-struct iwdg {
-	volatile uint32_t KR, PR, RLR, SR, WINR;
-};
-#define IWDG ((struct iwdg *) IWDG_BASE)
-
-/* User Functions */
-int iwdg_init(void);
-int iwdg_reset(void);
-//int iwdg_bypass(void);
-
-/* Helper Functions - DO NOT USE DIRECTLY */
+#include "sprinter/peripherals/gpio.h"
+#include "sprinter/peripherals/iwdg.h"
+#include "sprinter/peripherals/rcc.h"
+#include "sprinter/peripherals/uart.h"
 
 #endif
