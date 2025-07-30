@@ -25,6 +25,7 @@
 #include "rcc.h"
 #include "flash.h"
 
+//! Set system clock to be 180mhz
 int sysclk_set_180mhz(void) {
     // ensure that the HSI enabled and running
     while ((RCC->CR & 0x01) == 0);					/* check HSION */

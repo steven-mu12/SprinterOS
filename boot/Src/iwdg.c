@@ -25,11 +25,12 @@
 #include "rcc.h"
 #include "iwdg.h"
 
+/**
+ * @brief User Functions
+ */
 
-/* USER FUNCTIONS */
-
+//! Init function for IWDG
 int iwdg_init(void) {
-
 	// init the LSI oscillator and wait for stable
 	SET_BITS(RCC->CSR, 0, 0x01, 0x01);
 	while (!READ_BIT(RCC->CSR, 1));
@@ -40,7 +41,6 @@ int iwdg_init(void) {
 
 	// set the prescaler to get ~ a 1000ms expiration
 	while (IWDG->SR & 0x03);
-
 	SET_BITS(IWDG->PR, 0, 0x03, 0x02);
 	SET_BITS(IWDG->RLR, 0, 0x3E8, 0x0FFF);
 
@@ -53,7 +53,7 @@ int iwdg_init(void) {
 	return 0;
 }
 
-
+//! Reset IWDG periodically
 int iwdg_reset(void) {
 	// write the reload register
 	IWDG->KR = 0xAAAA;

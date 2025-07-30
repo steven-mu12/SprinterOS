@@ -25,14 +25,15 @@
 #include "rcc.h"
 #include "gpio.h"
 
-/* HELPER FUNCTIONS - DO NOT USE DIRECTLY */
-
+/**
+ * @brief User Functions
+ */
 void gpio_output_config(uint16_t pin, struct gpio* GPIO) {
 
     // set the output type, speed and PUPD
     SET_BITS(GPIO->OTYPER, pin, 0x00, 0x01);		/* set output type to push-pull */
     SET_BITS(GPIO->OSPEEDR, pin*2, 0x02, 0x03);		/* set speed to second highest speed */
-    SET_BITS(GPIO->PUPDR, pin*2, 0x00, 0x03);		/* don't use pu/pd because we're on push-pull */
+    SET_BITS(GPIO->PUPDR, pin*2, 0x00, 0x03);		/* don't use pu/pd bc we're on push-pull */
 }
 
 
@@ -41,10 +42,12 @@ void gpio_input_config(uint16_t pin, struct gpio* GPIO) {
 }
 
 
-/* USER FUNCTIONS */
+/**
+ * @brief User Functions
+ */
 
+//! GPIO pinmode functionality
 void gpio_pinmode(uint16_t pin, uint8_t mode) {
-
     // create gpio structure for the io pin's port
     uint8_t pin_num = PINNUM(pin);
     uint8_t pin_port = PINPORT(pin);
@@ -64,16 +67,15 @@ void gpio_pinmode(uint16_t pin, uint8_t mode) {
             gpio_input_config(pin, GPIO);
             break;
         case GPIO_MODE_AF:
-            return;									/* way too specific depending on peripheral to do here */
+            return;									/* specific to peripheral */
         case GPIO_MODE_ANALOG:
             return;									/* later implementation */
     }
     return;
 }
 
-
+//! Write digital data to a GPIO pin
 int gpio_digital_write(uint16_t pin, uint8_t value) {
-
     // access pin registers via gpio struct
     uint8_t pin_num = PINNUM(pin);
     uint8_t pin_port = PINPORT(pin);
@@ -81,13 +83,13 @@ int gpio_digital_write(uint16_t pin, uint8_t value) {
 
     // write to BSRR
     if (value == 1) {
-        GPIO->BSRR = SET_BITMASK(pin_num);			/* write to set register (lower 16 of 32 bits) */
+        GPIO->BSRR = SET_BITMASK(pin_num);			/* write to set register (lower 16b) */
     } else {
-        GPIO->BSRR = SET_BITMASK((pin_num + 16));	/* write to reset register (higher 16 of 32 bits) */
+        GPIO->BSRR = SET_BITMASK((pin_num + 16));	/* write to reset register (higher 16b) */
     }
 
     // check if ODR reflects the changes
-    for (volatile int i=0; i<5; i++);						/* tiny 10 clock cycle delay */
+    for (volatile int i=0; i<5; i++);				/* tiny simple loop delay */
 
     if (READ_BIT(GPIO->ODR, pin_num) != value) {	/* check ODR register */
         return 1;
@@ -96,9 +98,8 @@ int gpio_digital_write(uint16_t pin, uint8_t value) {
     }
 }
 
-
+//! Read digital data from GPIO pin
 int gpio_digital_read(uint16_t pin) {
-
     // access pin registers via gpio struct
     uint8_t pin_num = PINNUM(pin);
     uint8_t pin_port = PINPORT(pin);
