@@ -27,39 +27,37 @@
 #include "stm32f7.h"
 #include "rcc.h"
 
-/* GPIO structure */
+/**
+ * @brief GPIO Structure.
+ * @details (struct gpio *) casts the address behind to the address of a GPIO struct
+ * Just splits what's at that address into in this case 32 bit variables.
+ */
 struct gpio {
     volatile uint32_t MODER, OTYPER, OSPEEDR, PUPDR, IDR, ODR, BSRR, LCKR, AFR[2];
 };
-#define GPIO_PORT_INIT(port)		(struct gpio *)(GPIO_BASE_ADDRESS + 0x400*port)
-/* Basically, (struct gpio *) literally just casts the address behind it to the address
-   of a GPIO struct (hence *). This won't wipe any data, and just populates the struct
-   with whatever's there, and in this case we just split data into 32 bit variables */
+#define GPIO_PORT_INIT(port) (struct gpio *)(GPIO_BASE_ADDRESS + 0x400*port)
 
-/* GPIO macros */
-#define PIN(port, num) 		((((port) - 'A') << 8) | (num))		/* makes a uint16_t, top 8 being port ASCII - ASCII
-                                                                   of A (means A=0, B=1..) bottom 8 being pin num */
-#define PINNUM(pin) 		((pin & 0xFF))                      /* extract pin number from a pin */
-#define PINPORT(pin) 		((pin >> 8))                        /* extract port from a pin */
+/* GPIO Macros */
+#define PIN(port, num) 		 ((((port) - 'A') << 8) | (num))  /* makes uint16_t, top 8 port ASCII-ASCII
+                                                                 A (A=0, B=1..) btm 8 pin num */
+#define PINNUM(pin) 		 ((pin & 0xFF))                   /* extract pin number from a pin */
+#define PINPORT(pin) 		 ((pin >> 8))                     /* extract port from a pin */
 
-enum {GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF,			/* INPUT = 0, OUTPUT = 1 ... according to manual */
+enum {GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF,		  /* INPUT = 0, OUTPUT = 1 ... by manual */
       GPIO_MODE_ANALOG};
 
-
-/* User Functions */
+/**
+ * @brief User Functions
+ */
 void gpio_pinmode(uint16_t pin, uint8_t mode);
 int gpio_digital_write(uint16_t pin, uint8_t value);
 int gpio_digital_read(uint16_t pin);
 
-/* Helper functions - DO NOT USE DIRECTLY */
+/**
+ * @brief Helper Functions
+ * DO NOT USE DIRECTLY
+ */
 void gpio_output_config(uint16_t pin, struct gpio* GPIO);
 void gpio_input_config(uint16_t pin, struct gpio* GPIO);
-
-/* Other functions (will have another ticket to come back and implement) */
-// interrupt
-// analog mode
-// lock config
-// deinit the pin
-// a more customizable pin init
 
 #endif
