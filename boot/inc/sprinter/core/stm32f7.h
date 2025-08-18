@@ -27,7 +27,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
-/* SINGLE BITWISE OPERATION MACROS */
+/** 
+ * @brief SINGLE BITWISE OPERATION MACROS 
+ */
 #define SET_BITMASK(BIT)					(1U << BIT)					/* use | with reg */
 #define RESET_BITMASK(BIT)					(~(1U << BIT))				/* use & with reg */
 #define READ_BIT(INPUT, BIT)				(((INPUT) & (1U << BIT)) >> BIT)
@@ -35,16 +37,20 @@
 #define CLEAR_BITS_MASK(MASK, BIT)			(~(MASK << BIT)) 			/* use & with reg */
 #define INSERT_BITS_MASK(MASK, BIT)			(MASK << BIT)	 			/* use | with reg */
 #define SET_BITS(INPUT, BIT, NEW, MASK)		(INPUT = ( (INPUT & (CLEAR_BITS_MASK(MASK, BIT))) | \
-                                                       (INSERT_BITS_MASK(NEW, BIT)) \
-													 ) \
+                                                       (INSERT_BITS_MASK(NEW, BIT))             \
+													 )                                          \
                                             )
 #define READ_BITS(INPUT, BIT, MASK)			((INPUT & (MASK << BIT)) >> BIT)
 
-/* GENERAL DEFINITIONS */
+/** 
+ * @brief GENERAL DEFINITIONS
+ */
 #define HIGH							1
 #define LOW								0
 
-/* MMIO ADDRESSES */
+/** 
+ * @brief MMIO ADDRESSES
+ */
 #define FLASH_ADDRESS					0x40023C00
 #define RCC_ADDRESS						0x40023800
 #define GPIO_BASE_ADDRESS				0x40020000

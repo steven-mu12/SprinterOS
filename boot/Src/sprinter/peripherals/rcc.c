@@ -21,10 +21,13 @@
  */
 
 #include <stdint.h>
-#include "stm32f7.h"
-#include "rcc.h"
-#include "flash.h"
 
+#include "sprinter/peripherals/rcc.h"
+
+#include "sprinter/core/stm32f7.h"
+#include "sprinter/peripherals/flash.h"
+
+//! Set system clock to be 180mhz
 int sysclk_set_180mhz(void) {
     // ensure that the HSI enabled and running
     while ((RCC->CR & 0x01) == 0);					/* check HSION */
