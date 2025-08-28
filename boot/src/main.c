@@ -59,13 +59,18 @@ int main(void) {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
     }
 
+    // initialize timer
+    BASIC_TIM* timer;
+    if (init_basic_timer(TIM_6, &timer)) {
+        uart_out("[ TIMER ]: Timer initialization Failed");
+    } else {
+        uart_out("[ TIMER ]: Timer initialized");
+    }
+
     /* loop forever */
     while (1) {
-    	if (!iwdg_reset()) {
-            uart_out("[ IWDG ]: IWDG Reset Occured");
-    	}
-
-    	int i = 0;
-    	while (i < 3000000) {i++;}
+        // Testing. If timer is off, timer reset will not happen. SW reset occurs
+        iwdg_reset();
+        delay_ms(800, timer);
     }
 }

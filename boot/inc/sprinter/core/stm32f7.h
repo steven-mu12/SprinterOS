@@ -58,5 +58,6 @@
 #define GPIO_BASE_ADDRESS				0x40020000
 #define UART_1_BASE						0x40011000
 #define IWDG_BASE                       0x40003000
+#define BASIC_TIM_BASE                  0x40001000
 
 #endif
