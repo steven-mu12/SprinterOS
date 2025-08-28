@@ -33,12 +33,14 @@
 #define SET_BITMASK(BIT)					(1U << BIT)					/* use | with reg */
 #define RESET_BITMASK(BIT)					(~(1U << BIT))				/* use & with reg */
 #define READ_BIT(INPUT, BIT)				(((INPUT) & (1U << BIT)) >> BIT)
+#define SET_BIT(INPUT, BIT)                 (INPUT = (INPUT) | (SET_BITMASK(BIT)))
+#define RESET_BIT(INPUT, BIT)               (INPUT = (INPUT) & (RESET_BITMASK(BIT)))
 
 #define CLEAR_BITS_MASK(MASK, BIT)			(~(MASK << BIT)) 			/* use & with reg */
 #define INSERT_BITS_MASK(MASK, BIT)			(MASK << BIT)	 			/* use | with reg */
-#define SET_BITS(INPUT, BIT, NEW, MASK)		(INPUT = ( (INPUT & (CLEAR_BITS_MASK(MASK, BIT))) | \
-                                                       (INSERT_BITS_MASK(NEW, BIT))             \
-													 )                                          \
+#define SET_BITS(INPUT, BIT, PATTERN, MASK)	(INPUT = ( (INPUT & (CLEAR_BITS_MASK(MASK, BIT))) |  \
+                                                                (INSERT_BITS_MASK(PATTERN, BIT)) \
+													 )                                           \
                                             )
 #define READ_BITS(INPUT, BIT, MASK)			((INPUT & (MASK << BIT)) >> BIT)
 
