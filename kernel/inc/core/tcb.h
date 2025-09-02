@@ -1,8 +1,8 @@
 /**
  ******************************************************************************
- * @file           : scheduler.h
+ * @file           : tcb.h
  * @author         : Steven Mu
- * @summary        : SprinterOS Scheduler Header
+ * @summary		   : Task Control Block Structure
  ******************************************************************************
  * MIT License
 
@@ -20,30 +20,29 @@
  ******************************************************************************
  */
 
-#ifndef __SCHED_H__
-#define __SCHED_H__
+#ifndef __TCB_H__
+#define __TCB_H__
 
 #include <stdint.h>
 
-typedef struct {
-    uint16_t task_id;
-    uint8_t priority;          
-    uint32_t estimated_time;   
-    uint32_t arrival_time;     
-    uint8_t state;             
-    void (*task_function)(void *args);
-    void *task_arg;
-} PCB_t;
+#include "core/sprinter_common.h"
 
-/* definitions */
-#define ALPHA 1
-#define BETA 3
-#define MAX_READY_QUEUE_SIZE 25
+/** 
+ * @brief Sprinter Task Control Block
+ */
+typedef struct task_control_block{
+    /* Status field of possible task status */
+    enum Status {
+        STATUS_NULL = 0,
+        STATUS_READY = 1,
+        STATUS_RUNNING = 2,
+        STATUS_SUSPENDED = 3
+    } status;
 
-/* User Functions */
-void scheduler_init(void);
-void scheduler_add_task(PCB_t *task);
-PCB_t *scheduler_get_next_task(void);
-// void scheduler_periodic_update(void); (IMPLEMENT THIS)
+    void (*ptask)(void* args);   //!< callback of function to run in task
+    address stack_high;          //!< starting address of stack
+    task_t tid;                  //!< task ID
+    MemSize stack_size;          //!< stack size. Must be a multiple of 8
+} TCB;
 
-#endif 
+#endif /* __TCB_H__ */
