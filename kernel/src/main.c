@@ -1,8 +1,8 @@
 /**
  ******************************************************************************
- * @file           : tcb_buf.h
+ * @file           : main.c
  * @author         : Steven Mu
- * @summary		   : Task Control Block Buffer, used to store tasks
+ * @summary		   : Main kernel entrypoint
  ******************************************************************************
  * MIT License
 
@@ -20,29 +20,35 @@
  ******************************************************************************
  */
 
-#ifndef __TCB_BUF_H__
-#define __TCB_BUF_H__
-
 #include <stdint.h>
+#include <stddef.h>
+#include <stdarg.h>
 
 #include "core/sprinter_common.h"
 #include "core/tcb.h"
+#include "core/tcb_buf.h"
 
 /** 
- * @brief TaskBuf structure, used to store multiple TCBs
+ * @brief SPRINTEROS KERNEL MAIN FUNCTION
+ * @note functionality for the 
  */
-typedef struct {
-	volatile TCB buffer[MAX_TASKS];    //!< static buffer to store tasks
-	volatile task_t tids[MAX_TASKS];   //!< queue of TID's for faster access
-	volatile uint32_t tasks_in_queue;  //!< number of tasks in a queue
-} TaskBuf; 
+int _main(TaskBuf* tasks) {
 
-/**
- * @brief Task buffer user functionality
+    // main loop
+    while (1) {
+
+    }
+}
+
+/** 
+ * @brief SPRINTEROS KERNEL ENTRY POINT
+ * @note need this wrapper because when we add multithreading, need a central function
+ *       that spins up the threads & manages them + the global resources
  */
-int add_task(TaskBuf *tasks, TCB *new_task);
-int remove_task(TaskBuf *tasks, task_t target);
-int run_task(TaskBuf *tasks, task_t target);
-int suspend_task(TaskBuf *tasks, task_t target);
+int main(void) {
+    // Set up global task buffer
+    TaskBuf* tasks;
 
-#endif /* __TCB_BUF_H__ */
+    // Run the main kernel functionality (no threading for now)
+    _main(tasks);
+}

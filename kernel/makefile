@@ -1,14 +1,14 @@
 #  ******************************************************************************
-#  @file           : Makefile (bootloader)
+#  @file           : Makefile (kernel)
 #  @author         : Steven Mu
-#  @summary		   : Bootloader makefile
+#  @summary		   : Kernel makefile
 #  ******************************************************************************
 
 # Build includes
 -include src/sprinter.mk
 
 # General Project Parameters
-TARGET := boot
+TARGET := sprinterOS
 BUILD_DIR := build
 BUILD_OBJ_DIR := $(BUILD_DIR)/obj
 SOURCE_DIR := src
@@ -18,7 +18,7 @@ BIN_TARGET := $(BUILD_DIR)/$(TARGET).bin
 LIST_TARGET := $(BUILD_DIR)/$(TARGET).list
 MAP_TARGET := $(BUILD_DIR)/$(TARGET).map
 
-LDSCRIPT := $(SOURCE_DIR)/startup/STM32F767ZITX_FLASH.ld
+LDSCRIPT := ../boot/$(SOURCE_DIR)/startup/STM32F767ZITX_FLASH.ld
 
 # Compiler Toolchain
 COMPILER  := arm-none-eabi-gcc
@@ -33,9 +33,9 @@ LDFLAGS   := $(MCUFLAGS) -T $(LDSCRIPT) \
              -Wl,--gc-sections -Wl,-Map=$(MAP_TARGET) -Wl,--print-memory-usage \
              -Wl,--start-group -lc -lm -lnosys -Wl,--end-group
 
-# "make boot"
-# - Creates a flashable binary bootloader file of SprinterOS boot
-boot: $(BIN_TARGET)
+# "make sprinter"
+# - Creates a flashable binary sprinterOS executive
+sprinter: $(BIN_TARGET)
 
 # OBJCOPY -O binary means we want binary output, input < (elf target) and output bin file
 $(BIN_TARGET): $(ELF_TARGET)

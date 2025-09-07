@@ -28,7 +28,7 @@
 /** 
  * @brief GENERAL TCB CONSTANTS
  */
-#define TID_NULL        0        //!< predefined Task ID for the NULL task
+#define TID_NULL        (-1)     //!< predefined Task ID for the NULL task
 #define MAX_TASKS       16       //!< maximum number of tasks in the system
 #define MIN_STACK_SIZE  0x200    //!< min. size of each task’s stack
 
