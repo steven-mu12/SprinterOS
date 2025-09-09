@@ -37,12 +37,18 @@
  */
 #define RTX_OK   0
 #define RTX_ERR  1
+#define RTX_NOP  2
 
 /** 
  * @brief DATA TYPES
  */
 typedef uint32_t task_t;     //!< Task ID (TID)
-typedef uint32_t address;    //!< 32 bit addresses
+typedef uintptr_t Address;   //!< Pointer addresses
 typedef uint16_t MemSize;    //!< 16 bit memory size
+
+/** 
+ * @brief UNIVERSAL CONSTANTS
+ */
+#define SIGNATURE        0x04277DC9  // 69696969
 
 #endif /* __SPRINTER_COMMON_H__ */
