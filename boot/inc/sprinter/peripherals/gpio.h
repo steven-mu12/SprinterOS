@@ -63,16 +63,17 @@ typedef enum {
 /**
  * @brief User Functions
  */
-void gpio_pinmode(uint16_t pin, GPIO_MODE mode);
+int gpio_pinmode(uint16_t pin, GPIO_MODE mode, uint8_t AF_ID);
 int gpio_digital_write(uint16_t pin, bool value);
 int gpio_digital_read(uint16_t pin);
-
-/**
- * @brief Helper Functions
- * DO NOT USE DIRECTLY
- */
-void gpio_output_config(uint16_t pin, struct gpio* GPIO);
-void gpio_input_config(uint16_t pin, struct gpio* GPIO);
 int gpio_digital_write_sys(uint16_t pin, bool value);
+
+// /**
+//  * @brief Helper Functions
+//  * DO NOT USE DIRECTLY
+//  */
+// void gpio_output_config(uint16_t pin, struct gpio* GPIO);
+// void gpio_input_config(uint16_t pin, struct gpio* GPIO);
+// int gpio_digital_write_sys(uint16_t pin, bool value);
 
 #endif

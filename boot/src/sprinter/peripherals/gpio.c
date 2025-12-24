@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * @file           : gpio.h
+ * @file           : gpio.c
  * @author         : Steven Mu
  * @summary		   : General Purpose IO Functionalities
  ******************************************************************************
@@ -32,7 +32,7 @@
 
 /* =============== HELPER FUNCTIONS ===============*/
 /* do not directly use */
-void gpio_output_config(uint16_t pin, struct gpio* GPIO) {
+static void gpio_output_config(uint16_t pin, struct gpio* GPIO) {
 
     // set the output type, speed and PUPD
     SET_BITS(GPIO->OTYPER, pin, 0x00, 0x01);		/* set output type to push-pull */
@@ -40,30 +40,30 @@ void gpio_output_config(uint16_t pin, struct gpio* GPIO) {
     SET_BITS(GPIO->PUPDR, pin*2, 0x00, 0x03);		/* don't use pu/pd bc we're on push-pull */
 }
 
-void gpio_input_config(uint16_t pin, struct gpio* GPIO) {
+static void gpio_input_config(uint16_t pin, struct gpio* GPIO) {
     SET_BITS(GPIO->PUPDR, pin*2, 0x02, 0x03);		/* use pull down mode (pin=0 when hanging) */
 }
 
-int gpio_digital_write_sys(uint16_t pin, bool value) {
-    // access pin registers via gpio struct
-    uint8_t pin_num = PINNUM(pin);
-    uint8_t pin_port = PINPORT(pin);
-    struct gpio *GPIO = GPIO_PORT_INIT(pin_port);
+static void gpio_af_config(uint16_t pin, uint8_t AF_ID, struct gpio* GPIO) {
+    // determine pin number, this tells us whether to use the high or low AF reg
+	bool use_high_afr = 0;
+    uint8_t afr_offset = 0;
 
-    if (value) {
-        GPIO->BSRR = SET_BITMASK(pin_num);
-    } else {
-        GPIO->BSRR = SET_BITMASK((pin_num + 16));
-    }
+    if (PINNUM(pin) >= 8) {
+		use_high_afr = 1;
+		afr_offset = (PINNUM(pin) - 8) * 4;
+	} else {
+		use_high_afr = 0;
+		afr_offset = PINNUM(pin) * 4;
+	}
 
-    // the difference from the user version, is this uses a fake polled delay
-    for (volatile int i=0; i<1000; i++);
+    // set AF ID in AFR we selected, for the pin at the offset we calculated
+    SET_BITS(GPIO->AFR[use_high_afr], afr_offset, AF_ID, 0x0F);
 
-    if (READ_BIT(GPIO->ODR, pin_num) != value) {
-        return 1;
-    } else {
-        return 0;
-    }
+    // set output speed
+    SET_BITS(GPIO->OSPEEDR, PINNUM(pin) * 2, 0x02, 0x03);
+
+    // NOTE THAT THE USER SHOULD IMPLEMENT THEIR OWN SPECIFICS FOR PULL UP PULL DOWN, for idle state
 }
 
 
@@ -73,7 +73,11 @@ int gpio_digital_write_sys(uint16_t pin, bool value) {
  * @brief Set GPIO pin mode of a pin, and its AF if applicable
  * @note no default params in C, so must pass in something for AF!
  */
-void gpio_pinmode(uint16_t pin, GPIO_MODE mode) {
+int gpio_pinmode(
+    uint16_t pin,       // !< [out] 16 bit representation of our pin to set pinmode for
+    GPIO_MODE mode,     // !< [in] pinmode
+    uint8_t AF_ID       // !< [in] AF ID, if we're setting alternative function mode
+) {
     // create gpio structure for the io pin's port
     uint8_t pin_num = PINNUM(pin);
     uint8_t pin_port = PINPORT(pin);
@@ -93,11 +97,15 @@ void gpio_pinmode(uint16_t pin, GPIO_MODE mode) {
             gpio_input_config(pin, GPIO);
             break;
         case GPIO_MODE_AF:
-            return;									/* specific to peripheral */
+            if (AF_ID == NULL) {
+                return 1;
+            }
+            gpio_af_config(pin, AF_ID, GPIO);
+            break;
         case GPIO_MODE_ANALOG:
-            return;									/* later implementation */
+            return 0;									/* later implementation */
     }
-    return;
+    return 0;
 }
 
 
@@ -130,7 +138,31 @@ int gpio_digital_write(
     }
 }
 
-//! Read digital data from GPIO pin
+int gpio_digital_write_sys(uint16_t pin, bool value) {
+    // access pin registers via gpio struct
+    uint8_t pin_num = PINNUM(pin);
+    uint8_t pin_port = PINPORT(pin);
+    struct gpio *GPIO = GPIO_PORT_INIT(pin_port);
+
+    if (value) {
+        GPIO->BSRR = SET_BITMASK(pin_num);
+    } else {
+        GPIO->BSRR = SET_BITMASK((pin_num + 16));
+    }
+
+    // the difference from the user version, is this uses a fake polled delay
+    for (volatile int i=0; i<1000; i++);
+
+    if (READ_BIT(GPIO->ODR, pin_num) != value) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * @brief Read Digital Data From A Pin
+ */
 int gpio_digital_read(uint16_t pin) {
     // access pin registers via gpio struct
     uint8_t pin_num = PINNUM(pin);

@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * @file           : gpio.c
+ * @file           : uart.c
  * @author         : Steven Mu
  * @summary		   : UART Functionalities
  ******************************************************************************
@@ -90,43 +90,15 @@ int uart_output_str(char* input) {
 	return 0;
 }
 
-//! Set GPIO up for UART
+//! Set up AF mode, for UART
 int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_t AF_ID_RX) {
 	// set up the GPIO pins themselves
 	struct gpio *TX_GPIO = GPIO_PORT_INIT(PINPORT(TX_PIN));
 	struct gpio *RX_GPIO = GPIO_PORT_INIT(PINPORT(RX_PIN));
 
 	// configure the pins to AF mode
-	gpio_pinmode(TX_PIN, GPIO_MODE_AF);
-	gpio_pinmode(RX_PIN, GPIO_MODE_AF);
-
-	// determine if AFR high/low needs to be used
-	uint8_t target_afr_tx = 0, target_bit_tx = 0,
-			target_afr_rx = 0, target_bit_rx = 0;
-
-	if (PINNUM(TX_PIN) >= 8) {
-		target_afr_tx = 1;
-		target_bit_tx = (PINNUM(TX_PIN) - 8) * 4;
-	} else {
-		target_afr_tx = 0;
-		target_bit_tx = PINNUM(TX_PIN) * 4;
-	}
-
-	if (PINNUM(RX_PIN) >= 8) {
-		target_afr_rx = 1;
-		target_bit_rx = (PINNUM(RX_PIN) - 8) * 4;
-	} else {
-		target_afr_rx = 0;
-		target_bit_rx = PINNUM(RX_PIN) * 4;
-	}
-
-	// set both TX and RX to their AF IDs
-	SET_BITS(TX_GPIO->AFR[target_afr_tx], target_bit_tx, AF_ID_TX, 0x0F);
-	SET_BITS(RX_GPIO->AFR[target_afr_rx], target_bit_rx, AF_ID_RX, 0x0F);
-
-	// set output speed for TX and RX
-	SET_BITS(TX_GPIO->OSPEEDR, PINNUM(TX_PIN) * 2, 0x02, 0x03);
-	SET_BITS(RX_GPIO->OSPEEDR, PINNUM(RX_PIN) * 2, 0x02, 0x03);
+	gpio_pinmode(TX_PIN, GPIO_MODE_AF, AF_ID_TX);
+	gpio_pinmode(RX_PIN, GPIO_MODE_AF, AF_ID_RX);
 
 	// use pull up for UART lines on idle (because of how UART communication works)
 	SET_BITS(TX_GPIO->PUPDR, PINNUM(TX_PIN) * 2, 0x01, 0x03);
@@ -168,7 +140,7 @@ int uart_init(int uart_id) {
 	static uint16_t TX_PIN = PIN('A', 9);
 	static uint16_t RX_PIN = PIN('A', 10);
 
-	if (uart_gpio_setmode(TX_PIN, RX_PIN, 0x07, 0x07) == 1) {
+	if (uart_gpio_setmode(TX_PIN, RX_PIN, 0x07, 0x07)) {
 		return 1;
 	}
 

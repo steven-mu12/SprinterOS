@@ -43,7 +43,7 @@
 int error(uint8_t type) {
     // blink onboard LED type amount of times for the error
     uint16_t led_pin = PIN('B', 7);
-    gpio_pinmode(led_pin, GPIO_MODE_OUTPUT);
+    gpio_pinmode(led_pin, GPIO_MODE_OUTPUT, 0x00);
 
     while (1) {
         if (type == 0) {
