@@ -27,9 +27,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-// specific things
-#include "sprinter/peripherals/timer.h"
-
 /** 
  * @brief SINGLE BITWISE OPERATION MACROS 
  */
@@ -66,6 +63,7 @@
 /** 
  * @brief PREDEFINED, GLOBALLY KNOWN ADDRESSES
  */
+typedef struct BASIC_TIM BASIC_TIM;
 extern BASIC_TIM* __global_simple_timer_ptr__;
 
 #endif

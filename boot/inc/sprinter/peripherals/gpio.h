@@ -23,8 +23,19 @@
 #ifndef __GPIO_H__
 #define __GPIO_H__
 
+#include <stdbool.h>
 #include <stdint.h>
+
 #include "sprinter/core/stm32f7.h"
+
+/**
+ * @brief GPIO Helpful Macros
+ */
+#define PIN(port, num) 		 ((((port) - 'A') << 8) | (num))  /* makes uint16_t, top 8 port ASCII-ASCII
+                                                                 A (A=0, B=1..) btm 8 pin num */
+#define PINNUM(pin) 		 ((pin & 0xFF))                   /* extract pin number from a pin */
+#define PINPORT(pin) 		 ((pin >> 8))                     /* extract port from a pin */
+
 
 /**
  * @brief GPIO Structure.
@@ -36,20 +47,24 @@ struct gpio {
 };
 #define GPIO_PORT_INIT(port) (struct gpio *)(GPIO_BASE_ADDRESS + 0x400*port)
 
-/* GPIO Macros */
-#define PIN(port, num) 		 ((((port) - 'A') << 8) | (num))  /* makes uint16_t, top 8 port ASCII-ASCII
-                                                                 A (A=0, B=1..) btm 8 pin num */
-#define PINNUM(pin) 		 ((pin & 0xFF))                   /* extract pin number from a pin */
-#define PINPORT(pin) 		 ((pin >> 8))                     /* extract port from a pin */
 
-enum {GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF,		  /* INPUT = 0, OUTPUT = 1 ... by manual */
-      GPIO_MODE_ANALOG};
+/**
+ * @brief GPIO Mode Enum
+ * @note By documentation, these are the enum values corresponding to each mode
+ */
+typedef enum {
+    GPIO_MODE_INPUT = 0,
+    GPIO_MODE_OUTPUT = 1,
+    GPIO_MODE_AF = 2,
+    GPIO_MODE_ANALOG = 3,
+} GPIO_MODE;
+
 
 /**
  * @brief User Functions
  */
-void gpio_pinmode(uint16_t pin, uint8_t mode);
-int gpio_digital_write(uint16_t pin, uint8_t value);
+void gpio_pinmode(uint16_t pin, GPIO_MODE mode);
+int gpio_digital_write(uint16_t pin, bool value);
 int gpio_digital_read(uint16_t pin);
 
 /**
@@ -58,5 +73,6 @@ int gpio_digital_read(uint16_t pin);
  */
 void gpio_output_config(uint16_t pin, struct gpio* GPIO);
 void gpio_input_config(uint16_t pin, struct gpio* GPIO);
+int gpio_digital_write_sys(uint16_t pin, bool value);
 
 #endif

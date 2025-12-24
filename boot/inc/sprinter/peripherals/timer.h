@@ -2,7 +2,6 @@
 #define __TIMER_H__
 
 #include <stdint.h>
-#include "sprinter/core/stm32f7.h"
 
 /**
  * @brief Constant values
@@ -22,7 +21,7 @@ typedef enum {
  * @brief BASIC TIMER (TIM6 and TIM7) Structure
  * @note these are some super weird mappings. Note reserved regs
  */
-typedef struct {
+typedef struct BASIC_TIM {
     volatile uint32_t CR1, CR2;
     const    uint32_t RES_0;
     volatile uint32_t DIER, SR, EGR;

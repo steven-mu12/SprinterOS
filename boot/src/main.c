@@ -36,26 +36,57 @@
 #define UART_COMM_PORT 1
 
 /** 
+ * @brief SPRINTEROS BOOTLOADER ERROR STATE
+ * @note type 1 means happened at sysclk set, 2 means happened at timer setup, 3 means at UART setup
+ *       type 0 means anything else after we got UART (since we can now print stuff)
+ */
+int error(uint8_t type) {
+    // blink onboard LED type amount of times for the error
+    uint16_t led_pin = PIN('B', 7);
+    gpio_pinmode(led_pin, GPIO_MODE_OUTPUT);
+
+    while (1) {
+        if (type == 0) {
+            while (1) {
+                gpio_digital_write_sys(led_pin, 1);
+                for (volatile int i=0; i< 16000000; i++);
+                gpio_digital_write_sys(led_pin, 0);
+                for (volatile int i=0; i< 16000000; i++);
+            }
+
+        } else {
+            for (int j = 0; j < type; j++) {
+                gpio_digital_write_sys(led_pin, 1);
+                for (volatile int i=0; i< 16000000; i++);
+                gpio_digital_write_sys(led_pin, 0);
+                for (volatile int i=0; i< 16000000; i++);
+            }
+            for (volatile int i=0; i< 48000000 * 2; i++);
+        }
+    }
+}
+
+/** 
  * @brief SPRINTEROS BOOTLOADER ENTRY POINT
  */
 int main(void) {
+
     // switch the SYSCLK from HSI->PLL to use 180MHz
-    sysclk_set_180mhz();
+    if (sysclk_set_180mhz()) {
+        error(1);
+    }
 
     // initialize simple timer, then make global simple timer point to this
     // - note that this is defined at a set memory address, known by all modules in the boot
     //   that includes stm32f7.h. Since single threaded execution, no contention.
-    BASIC_TIM* timer;
-    __global_simple_timer_ptr__ = timer;
-
-    if (init_basic_timer(TIM_6, &timer)) {
-        uart_out("[ TIMR ]: Timer initialization Failed");
-    } else {
-        uart_out("[ TIMR ]: Timer initialized");
+    if (init_basic_timer(TIM_6, &__global_simple_timer_ptr__)) {
+        error(2);
     }
 
     // turn on UART output (hard coded to USART_1 for now)
-    uart_init(UART_COMM_PORT);
+    if (uart_init(UART_COMM_PORT)) {
+        error(3);
+    }
 
     uart_out("");
     uart_out("UART initialized");
@@ -67,6 +98,7 @@ int main(void) {
     // initialize watchdog timer
     if (iwdg_init()) {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialization Failed");
+        error(0);
     } else {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
     }
@@ -75,6 +107,6 @@ int main(void) {
     while (1) {
         // Testing. If timer is off, timer reset will not happen. SW reset occurs
         iwdg_reset();
-        delay_ms(800, timer);
+        delay_ms(800, __global_simple_timer_ptr__);
     }
 }
