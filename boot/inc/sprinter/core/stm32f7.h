@@ -27,6 +27,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
+// specific things
+#include "sprinter/peripherals/timer.h"
+
 /** 
  * @brief SINGLE BITWISE OPERATION MACROS 
  */
@@ -59,5 +62,10 @@
 #define UART_1_BASE						0x40011000
 #define IWDG_BASE                       0x40003000
 #define BASIC_TIM_BASE                  0x40001000
+
+/** 
+ * @brief PREDEFINED, GLOBALLY KNOWN ADDRESSES
+ */
+extern BASIC_TIM* __global_simple_timer_ptr__;
 
 #endif

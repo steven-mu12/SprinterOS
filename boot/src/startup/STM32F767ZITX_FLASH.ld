@@ -164,6 +164,14 @@ SECTIONS
     __bss_end__ = _ebss;
   } >RAM
 
+  /* Custom fixed region for global timer pointer in SRAM */
+  .global_simple_timer (NOLOAD) :
+  {
+    . = ALIGN(4);
+    __global_simple_timer_ptr__ = .;
+    . = . + 4;
+  } >RAM
+
   /* User_heap_stack section, used to check that there is enough "RAM" Ram  type memory left */
   ._user_heap_stack :
   {

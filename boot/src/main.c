@@ -42,6 +42,18 @@ int main(void) {
     // switch the SYSCLK from HSI->PLL to use 180MHz
     sysclk_set_180mhz();
 
+    // initialize simple timer, then make global simple timer point to this
+    // - note that this is defined at a set memory address, known by all modules in the boot
+    //   that includes stm32f7.h. Since single threaded execution, no contention.
+    BASIC_TIM* timer;
+    __global_simple_timer_ptr__ = timer;
+
+    if (init_basic_timer(TIM_6, &timer)) {
+        uart_out("[ TIMR ]: Timer initialization Failed");
+    } else {
+        uart_out("[ TIMR ]: Timer initialized");
+    }
+
     // turn on UART output (hard coded to USART_1 for now)
     uart_init(UART_COMM_PORT);
 
@@ -57,14 +69,6 @@ int main(void) {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialization Failed");
     } else {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
-    }
-
-    // initialize timer
-    BASIC_TIM* timer;
-    if (init_basic_timer(TIM_6, &timer)) {
-        uart_out("[ TIMER ]: Timer initialization Failed");
-    } else {
-        uart_out("[ TIMER ]: Timer initialized");
     }
 
     /* loop forever */
