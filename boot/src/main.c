@@ -31,9 +31,11 @@
  * @brief MAIN BOOT EXECUTIVE CONFIGURATIONS 
  */
 // TODO (smu): Migrate this to a config file
-#define VERSION       "0.0.1"
-#define BUILD_DATE    "2025-08-18"
+#define VERSION        "0.0.2"
+#define BUILD_DATE     "2025-12-24"
 #define UART_COMM_PORT 1
+
+#define TEST_SYSCLK    0
 
 /** 
  * @brief SPRINTEROS BOOTLOADER ERROR STATE
@@ -49,19 +51,23 @@ int error(uint8_t type) {
         if (type == 0) {
             while (1) {
                 gpio_digital_write_sys(led_pin, 1);
-                for (volatile int i=0; i< 16000000; i++);
+                for (volatile int i=0; i< 4000000; i++);
                 gpio_digital_write_sys(led_pin, 0);
-                for (volatile int i=0; i< 16000000; i++);
+                for (volatile int i=0; i< 4000000; i++);
+
+                iwdg_reset();
             }
 
         } else {
             for (int j = 0; j < type; j++) {
                 gpio_digital_write_sys(led_pin, 1);
-                for (volatile int i=0; i< 16000000; i++);
+                for (volatile int i=0; i< 4000000; i++);
                 gpio_digital_write_sys(led_pin, 0);
-                for (volatile int i=0; i< 16000000; i++);
+                for (volatile int i=0; i< 4000000; i++);
             }
-            for (volatile int i=0; i< 48000000 * 2; i++);
+            for (volatile int i=0; i< 24000000; i++);
+
+            // no worries about watchdog because it hasnt been set up yet
         }
     }
 }
@@ -70,6 +76,8 @@ int error(uint8_t type) {
  * @brief SPRINTEROS BOOTLOADER ENTRY POINT
  */
 int main(void) {
+
+    // ============ BASIC PERIPHERAL INITS ============
 
     // switch the SYSCLK from HSI->PLL to use 180MHz
     if (sysclk_set_180mhz()) {
@@ -92,15 +100,31 @@ int main(void) {
     uart_out("UART initialized");
     uart_out("UART Used: %d", UART_COMM_PORT);
 
+    // verify the clock with systick if need
+    if (TEST_SYSCLK) {
+        for (int j = 0; j < 20; j++) {
+            for (int i = 0; i < 100; i++) {
+                SysTick->LOAD = 1800000 - 1;
+                SysTick->VAL = 0;
+                SysTick->CTRL = 5;
+
+                while ((SysTick->CTRL & (1 << 16)) == 0);
+                SysTick->CTRL = 0;
+            }
+            uart_out("~1 second elapsed");
+        } 
+    }
+
     // introductory messsage
     uart_out("SprinterBoot v%s (BUILD %s)", VERSION, BUILD_DATE);
-
+    
     // initialize watchdog timer
     if (iwdg_init()) {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialization Failed");
         error(0);
     } else {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
+        iwdg_reset();
     }
 
     /* loop forever */
