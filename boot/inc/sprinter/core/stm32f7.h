@@ -27,6 +27,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "sprinter/core/cmsis_device.h"
+#include "external/cmsis/core_cm7.h"
+
 /** 
  * @brief SINGLE BITWISE OPERATION MACROS 
  */
@@ -59,6 +62,10 @@
 #define UART_1_BASE						0x40011000
 #define IWDG_BASE                       0x40003000
 #define BASIC_TIM_BASE                  0x40001000
+#define SPI1_BASE                       0x40013000
+#define SPI2_BASE                       0x40003800
+#define SPI3_BASE                       0x40003C00
+#define SPI4_BASE                       0x40013400
 
 /** 
  * @brief PREDEFINED, GLOBALLY KNOWN ADDRESSES

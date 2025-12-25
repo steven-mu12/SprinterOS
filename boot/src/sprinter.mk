@@ -6,9 +6,9 @@
 
 SOURCE_DIR = src
 BUILD_DIR  = build/obj
-INCLUDES   = -Iinc -Isrc
+INCLUDES   = -Iinc
 
-DEFS      := -DDEBUG -DSTM32 -DSTM32F7 -DSTM32F767ZITx
+DEFS      := -DDEBUG -DSTM32 -DSTM32F7 -DSTM32F767ZITx -D__FPU_PRESENT=1 -D__FPU_USED=1
 CFLAGS    := $(MCUFLAGS) $(DEFS) -O2 -g3 -ffunction-sections -fdata-sections -Wall -Wextra -Wpedantic \
 			 -Wconversion -Wshadow -Wdouble-promotion -Wformat=2
 
@@ -21,6 +21,7 @@ $(SOURCE_DIR)/sprinter/peripherals/iwdg.c \
 $(SOURCE_DIR)/sprinter/peripherals/uart.c \
 $(SOURCE_DIR)/sprinter/peripherals/rcc.c \
 $(SOURCE_DIR)/sprinter/peripherals/timer.c \
+$(SOURCE_DIR)/sprinter/peripherals/spi.c \
 $(SOURCE_DIR)/main.c
 
 S_SRCS := \
