@@ -35,13 +35,13 @@
 static void gpio_output_config(uint16_t pin, struct gpio* GPIO) {
 
     // set the output type, speed and PUPD
-    SET_BITS(GPIO->OTYPER, pin, 0x00, 0x01);		/* set output type to push-pull */
-    SET_BITS(GPIO->OSPEEDR, pin*2, 0x02, 0x03);		/* set speed to second highest speed */
-    SET_BITS(GPIO->PUPDR, pin*2, 0x00, 0x03);		/* don't use pu/pd bc we're on push-pull */
+    SET_BITS(GPIO->OTYPER, PINNUM(pin), 0x00, 0x01);		/* set output type to push-pull */
+    SET_BITS(GPIO->OSPEEDR, PINNUM(pin)*2, 0x03, 0x03);		/* set speed to the highest speed */
+    SET_BITS(GPIO->PUPDR, PINNUM(pin)*2, 0x00, 0x03);		/* don't use pu/pd bc we're on push-pull */
 }
 
 static void gpio_input_config(uint16_t pin, struct gpio* GPIO) {
-    SET_BITS(GPIO->PUPDR, pin*2, 0x02, 0x03);		/* use pull down mode (pin=0 when hanging) */
+    SET_BITS(GPIO->PUPDR, PINNUM(pin)*2, 0x02, 0x03);		/* use pull down mode (pin=0 when hanging) */
 }
 
 static void gpio_af_config(uint16_t pin, uint8_t AF_ID, struct gpio* GPIO) {
@@ -91,10 +91,10 @@ int gpio_pinmode(
     // specific pin configs depending on mode
     switch(mode) {
         case GPIO_MODE_INPUT:
-            gpio_output_config(pin, GPIO);
+            gpio_input_config(pin, GPIO);
             break;
         case GPIO_MODE_OUTPUT:
-            gpio_input_config(pin, GPIO);
+            gpio_output_config(pin, GPIO);
             break;
         case GPIO_MODE_AF:
             if (AF_ID == NULL) {

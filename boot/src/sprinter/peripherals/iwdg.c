@@ -43,8 +43,8 @@ int iwdg_init(void) {
 
 	// set the prescaler to get ~ a 1000ms expiration
 	while (IWDG->SR & 0x03);
-	SET_BITS(IWDG->PR, 0, 0x03, 0x02);
-	SET_BITS(IWDG->RLR, 0, 0x3E8, 0x0FFF);
+	SET_BITS(IWDG->PR, 0, 0x05, 0x03);
+	SET_BITS(IWDG->RLR, 0, 0x03E8, 0x0FFF);
 
 	// wait for SR to be updated
 	while (IWDG->SR & 0x03);

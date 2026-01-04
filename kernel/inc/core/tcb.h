@@ -40,9 +40,9 @@ typedef struct task_control_block{
     } status;
 
     void (*ptask)(void* args);   //!< callback of function to run in task
-    address stack_high;          //!< starting address of stack
+    Address stack_high;          //!< starting address of stack
     task_t tid;                  //!< task ID
     MemSize stack_size;          //!< stack size. Must be a multiple of 8
-} TCB;
+
 
 #endif /* __TCB_H__ */

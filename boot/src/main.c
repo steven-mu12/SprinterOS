@@ -95,12 +95,11 @@ int main(void) {
     if (uart_init(UART_COMM_PORT)) {
         error(3);
     }
-
     uart_out("");
     uart_out("UART initialized");
     uart_out("UART Used: %d", UART_COMM_PORT);
 
-    // verify the clock with systick if need
+    // Verify the clock with systick
     if (TEST_SYSCLK) {
         for (int j = 0; j < 20; j++) {
             for (int i = 0; i < 100; i++) {
@@ -126,6 +125,29 @@ int main(void) {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
         iwdg_reset();
     }
+
+    // ============ LOAD KERNERL FROM SD CARD ============
+
+    // initialize SPI (using SPI4 for boot)
+    SPI* spi_master;
+    if (init_spi(&spi_master, SPI1)) {
+        uart_out("[ SPI ]: SPI Init Failed");
+        error(0);
+    } else {
+        uart_out("[ SPI ]: SPI Init Successful");
+    }
+
+    iwdg_reset();
+
+    // initialize the SD Card connected via SPI
+    if (init_sd_slave(&spi_master, SPI1)) {
+        uart_out("[ SPI ]: SD Card Init Failed");
+        error(0);
+    } else {
+        uart_out("[ SPI ]: SD Card Init Successful");
+    }
+
+    iwdg_reset();
 
     /* loop forever */
     while (1) {
