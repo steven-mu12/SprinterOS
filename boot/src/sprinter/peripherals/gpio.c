@@ -1,25 +1,3 @@
-/**
- ******************************************************************************
- * @file           : gpio.c
- * @author         : Steven Mu
- * @summary		   : General Purpose IO Functionalities
- ******************************************************************************
- * MIT License
-
- * Copyright (c) 2024 Steven Mu
-
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
-
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- ******************************************************************************
- */
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -30,11 +8,7 @@
 #include "sprinter/peripherals/timer.h"
 
 
-/* =============== HELPER FUNCTIONS ===============*/
-/* do not directly use */
 static void gpio_output_config(uint16_t pin, struct gpio* GPIO) {
-
-    // set the output type, speed and PUPD
     SET_BITS(GPIO->OTYPER, PINNUM(pin), 0x00, 0x01);		/* set output type to push-pull */
     SET_BITS(GPIO->OSPEEDR, PINNUM(pin)*2, 0x03, 0x03);		/* set speed to the highest speed */
     SET_BITS(GPIO->PUPDR, PINNUM(pin)*2, 0x00, 0x03);		/* don't use pu/pd bc we're on push-pull */
@@ -45,7 +19,7 @@ static void gpio_input_config(uint16_t pin, struct gpio* GPIO) {
 }
 
 static void gpio_af_config(uint16_t pin, uint8_t AF_ID, struct gpio* GPIO) {
-    // determine pin number, this tells us whether to use the high or low AF reg
+    /* based on pin, either the high AF register is used or the low */
 	bool use_high_afr = 0;
     uint8_t afr_offset = 0;
 
@@ -57,38 +31,26 @@ static void gpio_af_config(uint16_t pin, uint8_t AF_ID, struct gpio* GPIO) {
 		afr_offset = PINNUM(pin) * 4;
 	}
 
-    // set AF ID in AFR we selected, for the pin at the offset we calculated
+    /* set speed and AF */
     SET_BITS(GPIO->AFR[use_high_afr], afr_offset, AF_ID, 0x0F);
-
-    // set output speed
     SET_BITS(GPIO->OSPEEDR, PINNUM(pin) * 2, 0x02, 0x03);
 
-    // NOTE THAT THE USER SHOULD IMPLEMENT THEIR OWN SPECIFICS FOR PULL UP PULL DOWN, for idle state
+    /* NOTE THAT THE USER SHOULD IMPLEMENT THEIR OWN SPECIFICS FOR PULL UP PULL DOWN, for idle state */
 }
 
-
-/* =============== USER FUNCTIONS ===============*/
-
 /**
- * @brief Set GPIO pin mode of a pin, and its AF if applicable
- * @note no default params in C, so must pass in something for AF!
+ * User functions
  */
-int gpio_pinmode(
-    uint16_t pin,       // !< [out] 16 bit representation of our pin to set pinmode for
-    GPIO_MODE mode,     // !< [in] pinmode
-    uint8_t AF_ID       // !< [in] AF ID, if we're setting alternative function mode
-) {
-    // create gpio structure for the io pin's port
+int gpio_pinmode(uint16_t pin, GPIO_MODE mode, uint8_t AF_ID) {
     uint8_t pin_num = PINNUM(pin);
     uint8_t pin_port = PINPORT(pin);
     struct gpio *GPIO = GPIO_PORT_INIT(pin_port); 	/* this is a pointer to the gpio structure
                                                        which we want to create where the stuff
                                                        is stored in memory */
-    // enable the clock and set the mode
     RCC->AHB1ENR |= SET_BITMASK(pin_port);			/* set port clock to on - see datasheet */
     SET_BITS(GPIO->MODER, pin_num*2, mode, 0x03);	/* set the pin to desired mode */
 
-    // specific pin configs depending on mode
+    /* specific pin configs depending on mode */
     switch(mode) {
         case GPIO_MODE_INPUT:
             gpio_input_config(pin, GPIO);
@@ -108,38 +70,29 @@ int gpio_pinmode(
     return 0;
 }
 
-
-/**
- * @brief Write Digital Data To A Pin
- */
-int gpio_digital_write(
-    uint16_t pin,    //!< [in] our 8 + 8 bit representation of a PIN
-    bool value       //!< [in] whether to write high or low to the pin!
-) {
-    // access pin registers via gpio struct
+int gpio_digital_write(uint16_t pin, bool value) {
     uint8_t pin_num = PINNUM(pin);
     uint8_t pin_port = PINPORT(pin);
     struct gpio *GPIO = GPIO_PORT_INIT(pin_port);
 
-    // write to BSRR based on whether we want to set or reset a bit
+    /* write to BSRR based on whether we want to set or reset a bit */
     if (value) {
         GPIO->BSRR = SET_BITMASK(pin_num);			/* write to set register (lower 16b) */
     } else {
         GPIO->BSRR = SET_BITMASK((pin_num + 16));	/* write to reset register (higher 16b) */
     }
 
-    // check if ODR reflects the changes after a tiny wait
+    /* check if ODR reflects the changes after a tiny delay */
     delay_ms(5, __global_simple_timer_ptr__);
-
-    if (READ_BIT(GPIO->ODR, pin_num) != value) {	/* check ODR register */
+    if (READ_BIT(GPIO->ODR, pin_num) != value) {
         return 1;
     } else {
         return 0;
     }
 }
 
+/* this is to be used if GPIO needs to be written before timer periperal is set up */
 int gpio_digital_write_sys(uint16_t pin, bool value) {
-    // access pin registers via gpio struct
     uint8_t pin_num = PINNUM(pin);
     uint8_t pin_port = PINPORT(pin);
     struct gpio *GPIO = GPIO_PORT_INIT(pin_port);
@@ -160,15 +113,10 @@ int gpio_digital_write_sys(uint16_t pin, bool value) {
     }
 }
 
-/**
- * @brief Read Digital Data From A Pin
- */
 int gpio_digital_read(uint16_t pin) {
-    // access pin registers via gpio struct
     uint8_t pin_num = PINNUM(pin);
     uint8_t pin_port = PINPORT(pin);
     struct gpio *GPIO = GPIO_PORT_INIT(pin_port);
 
-    // read the pin and return value
     return (READ_BIT(GPIO->IDR, pin_num));
 }

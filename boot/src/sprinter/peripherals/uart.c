@@ -1,25 +1,3 @@
-/**
- ******************************************************************************
- * @file           : uart.c
- * @author         : Steven Mu
- * @summary		   : UART Functionalities
- ******************************************************************************
- * MIT License
-
- * Copyright (c) 2024 Steven Mu
-
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
-
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- ******************************************************************************
- */
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -32,12 +10,7 @@
 #include "sprinter/peripherals/flash.h"
 #include "sprinter/peripherals/gpio.h"
 
-/**
- * @brief Helper Wrapper Functions
- * @note Do not directly use
- */
-//! Write a character to UART
-int uart_write_char(char data) {
+static int uart_write_char(char data) {
 	while (READ_BIT(UART_1->ISR, 7) == 0);			/* check TXE till high */
 	UART_1->TDR = (data & 0xFF);					/* write data into TDR */
 	while (READ_BIT(UART_1->ISR, 7) == 0);			/* check TXE & TC to be high */
@@ -45,16 +18,18 @@ int uart_write_char(char data) {
 	return 0;
 }
 
-//! Output hex type - Wrapper for uart_write_char()
-int uart_output_hex(int input) {
+/**
+ * support various output formats
+ */
+static int uart_output_hex(int input) {
 	char hex_char = 0;
 	uint32_t value = 0;
 
-	// output the hex 0x
+	/* output the hex 0x */
 	uart_write_char('0');
 	uart_write_char('x');
 
-	// mask for the first 4 bits, then next, then next
+	/* repeatedly mask for 4 bits at a time */
 	for (int i = 28; i >= 0; i-=4) {
 		value = (input >> i) & 0x0F;				/* get value of the 4 bits we're on */
 		if (value < 10) {							/* depends on value, print hex char */
@@ -68,8 +43,7 @@ int uart_output_hex(int input) {
 	return 0;
 }
 
-//! Output int type - Wrapper for uart_write_char()
-int uart_output_int(int input) {
+static int uart_output_int(int input) {
 	char char_buffer[12];
 	snprintf(char_buffer, sizeof(char_buffer), "%d", input);
 
@@ -80,7 +54,6 @@ int uart_output_int(int input) {
 	return 0;
 }
 
-//! Output string type - Wrapper for uart_write_char()
 int uart_output_str(char* input) {
 	while (*input != '\0') {
 		uart_write_char(*input);
@@ -90,7 +63,7 @@ int uart_output_str(char* input) {
 	return 0;
 }
 
-//! Set up AF mode, for UART
+/* set gpio mode */
 int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_t AF_ID_RX) {
 	// set up the GPIO pins themselves
 	struct gpio *TX_GPIO = GPIO_PORT_INIT(PINPORT(TX_PIN));
@@ -107,18 +80,15 @@ int uart_gpio_setmode(uint16_t TX_PIN, uint16_t RX_PIN, uint8_t AF_ID_TX, uint8_
 	return 0;
 }
 
-
 /**
- * @brief User Functions
+ * User Functions
  */
-//! Initialize UART before run
 int uart_init(int uart_id) {
-	// only support for UART 1
+	/* only support for UART 1 currently */
 	if (uart_id == 1) {
 		RCC->APB2ENR |= SET_BITMASK(4);
 	}
 
-	// configure TX/RX settings
 	if (READ_BIT(UART_1->CR1, 0) == 1) {			/* turn off UART if it's on */
 		UART_1->CR1 |= SET_BITMASK(0);
 	}
@@ -128,15 +98,15 @@ int uart_init(int uart_id) {
 	SET_BITS(UART_1->CR2, 12, 0x00, 0x03);			/* set stop bit to 1 */
 	SET_BITS(UART_1->CR1, 10, 0x00, 0x01);			/* set parity to none */
 
-	// set the baud rate (more support coming)
+	/* set baud rate */
 	SET_BITS(UART_1->BRR, 0, 0x30D, 0x3FF);			/* set BRR to 781 for 115200 baud */
 
-	// enable the UART port
+	/* enable the actual uart */
 	SET_BITS(UART_1->CR1, 0, 0x01, 0x01);			/* turn on UART */
 	SET_BITS(UART_1->CR1, 2, 0x01, 0x01);			/* turn on RX */
 	SET_BITS(UART_1->CR1, 3, 0x01, 0x01);			/* turn on TX */
 
-	// set the UART pins as ALT FUNCTION
+	/* set the uart GPIO pins to use AF mode */
 	static uint16_t TX_PIN = PIN('A', 9);
 	static uint16_t RX_PIN = PIN('A', 10);
 
@@ -147,9 +117,7 @@ int uart_init(int uart_id) {
 	return 0;
 }
 
-//! Output something to UART
 int uart_out(char* string, ...) {
-	// set up argument list
 	va_list args;
 	va_start(args, string);
 
@@ -157,10 +125,7 @@ int uart_out(char* string, ...) {
 		return 1;
 	}
 
-	// break up the string one by one
 	while (*string != '\0') {
-
-		// catch the replacements
 		if (*string == '%') {
 			string++;
 			if (*string == 'h') {
@@ -180,13 +145,13 @@ int uart_out(char* string, ...) {
 		string++;								/* increment character pointer by sizeof(char) */
 	}
 
-	// write the NEWL and CARRIAGE RET character
+	/* resolve newline and return carriage chars */
 	char new_line = '\r';
 	uart_write_char(new_line);
 	new_line = '\n';
 	uart_write_char(new_line);
 
-	// wait for TC to get pulled high
+	/* to indicate end of transmission, TC bit is pulled high. Poll until done */
 	while ((READ_BIT(UART_1->ISR, 6) == 0));
 
 	return 0;
