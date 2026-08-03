@@ -22,6 +22,7 @@ $(SOURCE_DIR)/sprinter/peripherals/uart.c \
 $(SOURCE_DIR)/sprinter/peripherals/rcc.c \
 $(SOURCE_DIR)/sprinter/peripherals/timer.c \
 $(SOURCE_DIR)/sprinter/peripherals/spi.c \
+$(SOURCE_DIR)/sprinter/peripherals/sd.c \
 $(SOURCE_DIR)/main.c
 
 S_SRCS := \

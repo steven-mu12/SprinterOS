@@ -6,13 +6,6 @@
 
 #include "sprinter/peripherals/gpio.h"
 
-/* Enum for SD Response */
-typedef enum {
-    SD_R1,
-    SD_R3,
-    SD_R7
-} SD_RES;
-
 typedef enum {
     SPI0 = 0,
     SPI1 = 1,
@@ -35,8 +28,15 @@ typedef struct SPI {
     volatile uint32_t CR1, CR2, SR, DR, CRCPR, RXCRCR, TXCRCR;
 } SPI;
 
+/* Force 8 bit read and writes to the DR */
+static inline void spi_write8(SPI* spi, uint8_t value) {
+    *(volatile uint8_t *)&spi->DR = value;
+}
+
+static inline uint8_t spi_read8(SPI* spi) {
+    return *(volatile uint8_t *)&spi->DR;
+}
 
 int init_spi(SPI** spi_master, SPI_NUM const spi_id);
-int init_sd_slave(SPI** spi_master, SPI_NUM const spi_id);
 
 #endif

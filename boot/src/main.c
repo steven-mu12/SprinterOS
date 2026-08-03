@@ -9,8 +9,8 @@
  * MAIN BOOT EXECUTIVE CONFIGURATIONS 
  */
 /* TODO (smu): Migrate this to a config file */
-#define VERSION        "0.0.2"
-#define BUILD_DATE     "2025-12-24"
+#define VERSION        "0.0.3"
+#define BUILD_DATE     "2026-08-02"
 #define UART_COMM_PORT 1
 
 #define TEST_SYSCLK    0
@@ -74,36 +74,40 @@ int main(void) {
     uart_out("UART Used: %d", UART_COMM_PORT);
 
     /* clock verification */
-    if (TEST_SYSCLK) {
-        for (int j = 0; j < 20; j++) {
-            for (int i = 0; i < 100; i++) {
-                SysTick->LOAD = 1800000 - 1;
-                SysTick->VAL = 0;
-                SysTick->CTRL = 5;
+#if TEST_SYSCLK
+    for (int j = 0; j < 10; j++) {
+        for (int i = 0; i < 100; i++) {
+            SysTick->LOAD = 1800000 - 1;
+            SysTick->VAL = 0;
+            SysTick->CTRL = 5;
 
-                while ((SysTick->CTRL & (1 << 16)) == 0);
-                SysTick->CTRL = 0;
-            }
-            uart_out("~1 second elapsed");
-        } 
-    }
+            while ((SysTick->CTRL & (1 << 16)) == 0);
+            SysTick->CTRL = 0;
+        }
+        uart_out("~1 second elapsed");
+    } 
+#endif
 
     uart_out("SprinterBoot v%s (BUILD %s)", VERSION, BUILD_DATE);
     
     /* bring up watchdog timer */
     if (iwdg_init()) {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialization Failed");
-        error(0);
+        goto loop_forever;
     } else {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
         iwdg_reset();
     }
 
     /* ============ LOAD SPRINTER OS FROM SD CARD ============ */
+    int ret;
+
     SPI* spi_master;
-    if (init_spi(&spi_master, SPI1)) {
+
+    ret = init_spi(&spi_master, SPI1);
+    if (ret) {
         uart_out("[ SPI ]: SPI Init Failed");
-        error(0);
+        goto loop_forever;
     } else {
         uart_out("[ SPI ]: SPI Init Successful");
     }
@@ -111,15 +115,16 @@ int main(void) {
     iwdg_reset();
 
     if (init_sd_slave(&spi_master, SPI1)) {
-        uart_out("[ SPI ]: SD Card Init Failed");
-        error(0);
+        uart_out("[ SD ]: SD Card Init Failed");
+        goto loop_forever;
     } else {
-        uart_out("[ SPI ]: SD Card Init Successful");
+        uart_out("[ SD ]: SD Card Init Successful");
     }
 
     iwdg_reset();
 
     /* loop forever */
+loop_forever:
     while (1) {
         /* testing. If timer is off, timer reset will not happen. SW reset occurs */
         iwdg_reset();
