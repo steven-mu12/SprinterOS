@@ -114,11 +114,39 @@ int main(void) {
 
     iwdg_reset();
 
-    if (init_sd_slave(&spi_master, SPI1)) {
+    if (sd_init(&spi_master, SPI1)) {
         uart_out("[ SD ]: SD Card Init Failed");
         goto loop_forever;
     } else {
         uart_out("[ SD ]: SD Card Init Successful");
+    }
+
+    iwdg_reset();
+
+    /* testing out an SD read */
+    uint8_t block[512];
+
+    iwdg_reset();
+
+    if (sd_read_block(&spi_master, SPI1, 0, block)) {
+        uart_out("[ SD ]: Block 0 read failed");
+        goto loop_forever;
+    }
+    uart_out("[ SD ]: Block 0 read OK");
+
+    char text[9];
+    for (int i = 0; i < 8; i++) {
+        uint8_t c = block[i];
+        text[i] = (char)c;
+    }
+    text[9] = '\0';
+    uart_out("Block 0 First 8 Bytes test: %s", text);
+
+    /* boot sector signature sits in the last two bytes */
+    if ((block[510] == 0x55) && (block[511] == 0xAA)) {
+        uart_out("[ SD ]: Valid boot signature");
+    } else {
+        uart_out("[ SD ]: No boot signature (%h %h)", block[510], block[511]);
     }
 
     iwdg_reset();

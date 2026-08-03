@@ -82,6 +82,11 @@ static int sd_send_cmd(SPI** spi_master,        /* [in] SPI Master structure to 
         }
     }
 
+    /* CMD17's data packet follows the R1, so leave CS asserted for the caller */
+    if (cmd == 17) {
+        return (timeout == 0);
+    }
+
     /* deassert CS and send post-command clocks (8 extra cycles) */
     gpio_digital_write(CS_NSS_PIN, 1);
     send_dummy(spi_master);
@@ -90,7 +95,7 @@ static int sd_send_cmd(SPI** spi_master,        /* [in] SPI Master structure to 
 }
 
 #define SD_INIT_LOOP_LIMIT  128
-int init_sd_slave(SPI** spi_master, SPI_NUM const spi_id) {
+int sd_init(SPI** spi_master, SPI_NUM const spi_id) {
     assert(spi_master != NULL);
 
     uint16_t CS_NSS_PIN = CS_NSS_MAPPING[ spi_id ];
@@ -129,7 +134,8 @@ int init_sd_slave(SPI** spi_master, SPI_NUM const spi_id) {
     }
     /* if card does not know CMD8, then SD_V1 card */
     if (((resp_buffer[0] & 0x04) >> 2) ||(resp_buffer[3] != 0x01) || (resp_buffer[4] != 0xAA)) {
-        uart_out("SD_V1.x SD Card Detected");
+        uart_out("SD_V1.x SD Card Detected. Unsupported");
+        return 1;
     } else {
         uart_out("SD_V2.x SD Card Detected");
     }
@@ -175,8 +181,61 @@ int init_sd_slave(SPI** spi_master, SPI_NUM const spi_id) {
     if (resp_buffer[1] & 0x40) {
         uart_out("SDHC / SDXC Card (block addressed)");
     } else {
-        uart_out("SDSC Card (byte addressed)");
+        uart_out("SDSC Card (byte addressed), unsupported");
+        return 1;
     }
 
     return 0;
+}
+
+#define SD_TOKEN_START  0xFE
+int sd_read_block(SPI** spi_master, SPI_NUM spi_id, uint32_t block, uint8_t* resp_buffer) {
+    assert(spi_master != NULL);
+    assert(resp_buffer != NULL);
+
+    /* sending CMD17 to read will leave CS asserted */
+    int ret;
+    uint16_t CS_NSS_PIN = CS_NSS_MAPPING[ spi_id ];
+
+    ret = sd_send_cmd(spi_master, spi_id, 17, block, 0x01, SD_R1, resp_buffer);
+    if (ret != 0) {
+        uart_out("CMD17 send failed");
+        goto cleanup;
+    }
+    if (resp_buffer[0] != 0x00) {
+        uart_out("CMD17 returned R1 error %h", resp_buffer[0]);
+        ret = 1;
+        goto cleanup;
+    }
+
+    /* spam dummy 0xFF until the card hands back a token */
+    uint8_t token = 0xFF;
+    uint32_t timeout = 100000;
+    while (timeout != 0) {
+        token = send_dummy(spi_master);
+        if (token != 0xFF) {
+            break;
+        }
+        timeout--;
+    }
+    if (token != SD_TOKEN_START) {
+        uart_out("CMD17 data token bad or timed out %h", token);
+        ret = 1;
+        goto cleanup;
+    }
+
+    /* read data into the buffer */
+    for (int i = 0; i < SD_BLOCK_SIZE; i++) {
+        resp_buffer[i] = send_dummy(spi_master);
+    }
+
+    /* crc16, ignore for now */
+    (void)send_dummy(spi_master);
+    (void)send_dummy(spi_master);
+
+    ret = 0;
+cleanup:
+    gpio_digital_write(CS_NSS_PIN, 1);
+    send_dummy(spi_master);
+    return ret;
 }
