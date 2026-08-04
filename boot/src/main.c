@@ -63,10 +63,10 @@ int check_sprinteros_sig(SPI* spi_master) {
     uint8_t block[512];
 
     if (sd_read_block(spi_master, SPI1, OS_MAX_BLOCKS-1, block)) {
-        uart_out("[ SD ]: Block %d read failed", OS_MAX_BLOCKS);
+        uart_out("[ SD ]: Block %d read failed", OS_MAX_BLOCKS - 1);
         return 1;
     }
-    uart_out("[ SD ]: Block %d read OK", OS_MAX_BLOCKS);
+    uart_out("[ SD ]: Block %d read OK", OS_MAX_BLOCKS - 1);
 
     if ((block[510] == 0x55) && (block[511] == 0xAA)) {
         uart_out("[ OS LOADER ]: Valid OS signature");
@@ -92,6 +92,43 @@ int load_sprinteros(SPI* spi_master, int recovery) {
         iwdg_reset();
     }
     return 0;
+}
+
+static void jump_to_sprinteros(void) {
+    uint32_t *image = (uint32_t *)OS_LOAD_ADDR;
+    uint32_t sp = image[0];
+    uint32_t pc = image[1];
+
+    /* is the sp that we want to jump to even in KERNEL IMAGE memory space */
+    if ((sp < 0x20000000) || (sp > 0x20080000)) {
+        uart_out("[ OS LOADER ]: Bad stack pointer in image %h", sp);
+        return;
+    }
+    if ((pc & 0x01) == 0) {
+        uart_out("[ OS LOADER ]: Entry point not thumb %h", pc);
+        return;
+    }
+
+    uart_out("[ OS LOADER ]: Jumping to SprinterOS (SP %h, PC %h)", sp, pc);
+
+    /* disable interrupts */
+    __disable_irq();
+    SysTick->CTRL = 0;
+    SysTick->VAL  = 0;
+    for (int i = 0; i < 8; i++) {
+        NVIC->ICER[i] = 0xFFFFFFFF;
+        NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+
+    SCB->VTOR = OS_LOAD_ADDR; /* set vector table offset to where os is (img starts with vec table) */
+    __DSB(); /* data sync barrier, blocks until all mem accesses complete */
+    __ISB(); /* inst sync barrier, flush pipeline so everything below is in-order */
+
+    __set_MSP(sp);  /* set SP as the SP address */
+    __ISB();
+
+    __enable_irq();
+    ((void (*)(void))pc)(); /* jump to PC */
 }
 
 /** 
@@ -137,7 +174,7 @@ int main(void) {
         goto loop_forever;
     }
     uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
-    
+
     iwdg_reset();
 
     /* ============ LOAD SPRINTER OS FROM SD CARD ============ */
@@ -172,7 +209,7 @@ int main(void) {
     /* load OS */
     int boot_recovery_mode = 0;
 #if RECOVERY_MDOE
-    boot_recovery_mode = 0;
+    boot_recovery_mode = 1;
 #endif
 
     if (load_sprinteros(spi_master, boot_recovery_mode)) {
@@ -181,6 +218,11 @@ int main(void) {
     } else {
         uart_out("[ OS LOADER ]: Loaded SprinterOS into SRAM");
     }
+
+    iwdg_reset();
+
+    jump_to_sprinteros();
+    uart_out("[ OS LOADER ]: Jump to SprinterOS failed");
 
     /* loop forever */
 loop_forever:
