@@ -8,18 +8,18 @@
 #include "sprinter/peripherals.h"
 
 /* send 8 clock cycles (1 byte) of dummy data to SPI device */
-static uint8_t send_dummy(SPI** spi) {
-    while (READ_BIT((*spi)->SR, 1) == 0);
-    spi_write8(*spi, 0xFF);                      /* send the dummy byte */
-    while (READ_BIT((*spi)->SR, 0) == 0);        /* wait for RXNE to be not empty (means response is here) */
-    return (spi_read8(*spi));                    /* read out the bits from DR and discard */
+static uint8_t send_dummy(SPI* spi) {
+    while (READ_BIT(spi->SR, 1) == 0);
+    spi_write8(spi, 0xFF);                    /* send the dummy byte */
+    while (READ_BIT(spi->SR, 0) == 0);        /* wait for RXNE to be not empty (means response is here) */
+    return (spi_read8(spi));                  /* read out the bits from DR and discard */
 }
 
 /**
  * send a command to SD card
  */
 #define SD_CMD_PREFIX   0x40
-static int sd_send_cmd(SPI** spi_master,        /* [in] SPI Master structure to set up */
+static int sd_send_cmd(SPI* spi_master,        /* [in] SPI Master structure to set up */
                        SPI_NUM spi_id,          /* [in] SPI we're using (1->4 supported) */
                        uint8_t cmd,             /* [in] Command number we want to send */
                        uint32_t arg,            /* [in] 32 bit argument */
@@ -33,7 +33,7 @@ static int sd_send_cmd(SPI** spi_master,        /* [in] SPI Master structure to 
     uint16_t CS_NSS_PIN = CS_NSS_MAPPING[ spi_id ];
 
     /* select the slave (set chip select to low) */
-    while (READ_BIT((*spi_master)->SR, 7));
+    while (READ_BIT(spi_master->SR, 7));
     gpio_digital_write(CS_NSS_PIN, 0);
     send_dummy(spi_master);
 
@@ -48,11 +48,11 @@ static int sd_send_cmd(SPI** spi_master,        /* [in] SPI Master structure to 
     };
 
     for (int i = 0; i < 6; i++) {
-        while (READ_BIT((*spi_master)->SR, 1) == 0);   /* TXE */
-        spi_write8(*spi_master, frame[i]);
+        while (!READ_BIT(spi_master->SR, 1));   /* TXE */
+        spi_write8(spi_master, frame[i]);
 
-        while (READ_BIT((*spi_master)->SR, 0) == 0);   /* RXNE */
-        (void)spi_read8(*spi_master);
+        while (!READ_BIT(spi_master->SR, 0));   /* RXNE */
+        (void)spi_read8(spi_master);
     }
 
     /* wait for the sd card to return some results (time out after 128 bytes) */
@@ -95,7 +95,7 @@ static int sd_send_cmd(SPI** spi_master,        /* [in] SPI Master structure to 
 }
 
 #define SD_INIT_LOOP_LIMIT  128
-int sd_init(SPI** spi_master, SPI_NUM const spi_id) {
+int sd_init(SPI* spi_master, SPI_NUM const spi_id) {
     assert(spi_master != NULL);
 
     uint16_t CS_NSS_PIN = CS_NSS_MAPPING[ spi_id ];
@@ -106,13 +106,13 @@ int sd_init(SPI** spi_master, SPI_NUM const spi_id) {
      */
     uint8_t resp_buffer[5];
 
-    while (READ_BIT((*spi_master)->SR, 1) == 0);
+    while (READ_BIT(spi_master->SR, 1) == 0);
     gpio_digital_write(CS_NSS_PIN, 1);
     for (int i = 0; i < 10; i++) {
         send_dummy(spi_master);
     }
 
-    while (READ_BIT((*spi_master)->SR, 7)); /* wait until SPI's not busy anymore to proceed */
+    while (READ_BIT(spi_master->SR, 7)); /* wait until SPI's not busy anymore to proceed */
 
     /* reset the card (send CMD0) */
     if (sd_send_cmd(spi_master, spi_id, 0, 0x00000000, 0x95, SD_R1, resp_buffer)) {
@@ -189,7 +189,7 @@ int sd_init(SPI** spi_master, SPI_NUM const spi_id) {
 }
 
 #define SD_TOKEN_START  0xFE
-int sd_read_block(SPI** spi_master, SPI_NUM spi_id, uint32_t block, uint8_t* resp_buffer) {
+int sd_read_block(SPI* spi_master, SPI_NUM spi_id, uint32_t block, uint8_t* resp_buffer) {
     assert(spi_master != NULL);
     assert(resp_buffer != NULL);
 

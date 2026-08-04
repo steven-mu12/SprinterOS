@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#include "sprinter/core/memmap.h"
 #include "sprinter/core/stm32f7.h"
 #include "sprinter/peripherals.h"
 
@@ -14,6 +15,7 @@
 #define UART_COMM_PORT 1
 
 #define TEST_SYSCLK    0
+#define RECOVERY_MDOE  0
 
 /** 
  * SPRINTEROS BOOTLOADER ERROR STATE (LED DEBUGGING)
@@ -51,6 +53,45 @@ int error(uint8_t type) {
             /* no worries about watchdog in this case because it hasnt been set up yet */
         }
     }
+}
+
+/** 
+ * SPRINTEROS loader
+ * loads the kernel from SD card into memory, based on recovery 
+ */
+int check_sprinteros_sig(SPI* spi_master) {
+    uint8_t block[512];
+
+    if (sd_read_block(spi_master, SPI1, OS_MAX_BLOCKS-1, block)) {
+        uart_out("[ SD ]: Block %d read failed", OS_MAX_BLOCKS);
+        return 1;
+    }
+    uart_out("[ SD ]: Block %d read OK", OS_MAX_BLOCKS);
+
+    if ((block[510] == 0x55) && (block[511] == 0xAA)) {
+        uart_out("[ OS LOADER ]: Valid OS signature");
+        return 0;
+    }
+
+    uart_out("[ OS LOADER ]: No OS signature (%h %h)", block[510], block[511]);
+    return 1;
+}
+
+int load_sprinteros(SPI* spi_master, int recovery) {
+    uint8_t *dest;
+
+    for (int i=0; i < OS_MAX_BLOCKS; i++) {
+        dest = (uint8_t *)(OS_LOAD_ADDR + ((uint32_t)i * SD_BLOCK_SIZE));
+
+        if (sd_read_block(spi_master, SPI1, i, dest)) {
+            uart_out("[ SD ]: Block %d read failed", i);
+            return 1;
+        }
+        uart_out("Loaded SprinterOS block %d", i);
+
+        iwdg_reset();
+    }
+    return 0;
 }
 
 /** 
@@ -94,18 +135,15 @@ int main(void) {
     if (iwdg_init()) {
     	uart_out("[ IWDG ]: Internal Watchdog Timer initialization Failed");
         goto loop_forever;
-    } else {
-    	uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
-        iwdg_reset();
     }
+    uart_out("[ IWDG ]: Internal Watchdog Timer initialized");
+    
+    iwdg_reset();
 
     /* ============ LOAD SPRINTER OS FROM SD CARD ============ */
-    int ret;
-
     SPI* spi_master;
 
-    ret = init_spi(&spi_master, SPI1);
-    if (ret) {
+    if (init_spi(&spi_master, SPI1)) {
         uart_out("[ SPI ]: SPI Init Failed");
         goto loop_forever;
     } else {
@@ -114,7 +152,7 @@ int main(void) {
 
     iwdg_reset();
 
-    if (sd_init(&spi_master, SPI1)) {
+    if (sd_init(spi_master, SPI1)) {
         uart_out("[ SD ]: SD Card Init Failed");
         goto loop_forever;
     } else {
@@ -123,33 +161,26 @@ int main(void) {
 
     iwdg_reset();
 
-    /* testing out an SD read */
-    uint8_t block[512];
-
-    iwdg_reset();
-
-    if (sd_read_block(&spi_master, SPI1, 0, block)) {
-        uart_out("[ SD ]: Block 0 read failed");
+    /* check os signature */
+    if (check_sprinteros_sig(spi_master)) {
+        uart_out("[ OS LOADER ]: SprinterOS signature check failed");
         goto loop_forever;
     }
-    uart_out("[ SD ]: Block 0 read OK");
-
-    char text[9];
-    for (int i = 0; i < 8; i++) {
-        uint8_t c = block[i];
-        text[i] = (char)c;
-    }
-    text[9] = '\0';
-    uart_out("Block 0 First 8 Bytes test: %s", text);
-
-    /* boot sector signature sits in the last two bytes */
-    if ((block[510] == 0x55) && (block[511] == 0xAA)) {
-        uart_out("[ SD ]: Valid boot signature");
-    } else {
-        uart_out("[ SD ]: No boot signature (%h %h)", block[510], block[511]);
-    }
 
     iwdg_reset();
+
+    /* load OS */
+    int boot_recovery_mode = 0;
+#if RECOVERY_MDOE
+    boot_recovery_mode = 0;
+#endif
+
+    if (load_sprinteros(spi_master, boot_recovery_mode)) {
+        uart_out("[ OS LOADER ]: Failed to load SprinterOS");
+        goto loop_forever;
+    } else {
+        uart_out("[ OS LOADER ]: Loaded SprinterOS into SRAM");
+    }
 
     /* loop forever */
 loop_forever:

@@ -35,20 +35,29 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
+INCLUDE memmap.ld
+
 /* Highest address of the user mode stack */
-_estack = ORIGIN(RAM) + LENGTH(RAM); /* end of "RAM" Ram type memory */
+_estack = ORIGIN(DTCM) + LENGTH(DTCM); /* end of "RAM" Ram type memory */
 
 _Min_Heap_Size = 0x200; /* required amount of heap */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
-/* Memories definition */
-MEMORY
-{
-  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 512K
-  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 2048K
-}
+_dtcm_start      = ORIGIN(DTCM);
+_dtcm_end        = ORIGIN(DTCM) + LENGTH(DTCM);
+_userspace_start = ORIGIN(USERSPACE);
+_userspace_end   = ORIGIN(USERSPACE) + LENGTH(USERSPACE);
+_os_load_addr    = ORIGIN(KERNEL_IMG);
+_os_load_end     = ORIGIN(KERNEL_IMG) + LENGTH(KERNEL_IMG);
 
-/* Sections */
+/* 
+ * Sections 
+ * 
+ * note that everything uses DTCM because boot and kernel executive are the only
+ * ones that use this linkerscript. Both share the DTCM memory section
+ *
+ * after boot, userspace memory is completely managed by the kernel
+ */
 SECTIONS
 {
   /* The startup code into "FLASH" Rom type memory */
@@ -146,7 +155,7 @@ SECTIONS
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
 
-  } >RAM AT> FLASH
+  } >DTCM AT> FLASH
 
   /* Uninitialized data section into "RAM" Ram type memory */
   . = ALIGN(4);
@@ -162,7 +171,7 @@ SECTIONS
     . = ALIGN(4);
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
-  } >RAM
+  } >DTCM
 
   /* Custom fixed region for global timer pointer in SRAM */
   .global_simple_timer (NOLOAD) :
@@ -170,7 +179,7 @@ SECTIONS
     . = ALIGN(4);
     __global_simple_timer_ptr__ = .;
     . = . + 4;
-  } >RAM
+  } >DTCM
 
   /* User_heap_stack section, used to check that there is enough "RAM" Ram  type memory left */
   ._user_heap_stack :
@@ -181,7 +190,7 @@ SECTIONS
     . = . + _Min_Heap_Size;
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
-  } >RAM
+  } >DTCM
 
   /* Remove information from the compiler libraries */
   /DISCARD/ :

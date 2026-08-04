@@ -14,7 +14,7 @@ typedef enum {
     SD_R7
 } SD_RES;
 
-int sd_init(SPI** spi_master, SPI_NUM const spi_id);
-int sd_read_block(SPI** spi_master, SPI_NUM spi_id, uint32_t block, uint8_t* resp_buffer);
+int sd_init(SPI* spi_master, SPI_NUM const spi_id);
+int sd_read_block(SPI* spi_master, SPI_NUM spi_id, uint32_t block, uint8_t* resp_buffer);
 
 #endif
