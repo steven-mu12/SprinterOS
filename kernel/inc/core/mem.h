@@ -1,24 +1,3 @@
-/**
- ******************************************************************************
- * @file           : mem.h
- * @author         : Steven Mu
- * @summary		   : Memory interface header for SprinterOS
- ******************************************************************************
- * MIT License
-
- * Copyright (c) 2025 Steven Mu
-
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
-
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- ******************************************************************************
- */
 #ifndef __MEM_H__
 #define __MEM_H__
 
@@ -26,54 +5,65 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "memmap_config.h"
 #include "sprinter_common.h"
 
-/** 
- * @brief Metadata field of memory block
+/* 
+ * memory regions used for userspace & kernelspace
  */
-typedef struct {
-    bool allocated;
-    uint32_t signature;
-    size_t size;
-    task_t owner;
-} Metadata; 
+extern uint8_t _dtcm_start[];
+extern uint8_t _dtcm_end[];
+extern uint8_t _userspace_start[];
+extern uint8_t _userspace_end[];
+extern uint8_t _kernel_stack_size[];
+extern uint8_t _end[];
 
-/** 
- * @brief Allocated memory block (node in linked list)
- * @note since we're using itself, forward declare with tag
+#define USERSPACE_START_ADDR        ((uint32_t)_userspace_start)
+#define USERSPACE_END_ADDR          ((uint32_t)_userspace_end)
+
+#define KERNELSPACE_START_ADDR      ((uint32_t)_dtcm_start)
+#define KERNELSPACE_END_ADDR        ((uint32_t)_dtcm_end)
+
+/* kernel heap runs from the end of .bss up to the bottom of the kernel stack */
+#define KERNELSPACE_HEAP_START_ADDR   ((uint32_t)_end)
+#define KERNELSPACE_HEAP_END_ADDR     ((uint32_t)_dtcm_end - (uint32_t)_kernel_stack_size)
+/*  
+    KERNEL MEMORY LAYOUT
+    -----------------------------------------------------------------------------
+    | .isr_vec_table | .txt | .data | .bss | HEAP   .....     | STACK     ..... | 
+    -----------------------------------------------------------------------------
+    _dctm_start                            _end                _kernel_stack_size
+*/
+
+/* 
+ * userspace is sectioned by 4KB - right now, each task just gets a 4KB piece of the stack 
+ * TODO virtual memory & proper paging coming soon
+ */          
+#define USERSPACE_HEAP_SIZE               (USERSPACE_SIZE_B - (STACK_SIZE * MAX_TASKS))
+#define USERSPACE_HEAP_START_ADDR         USERSPACE_START_ADDR
+#define USERSPACE_HEAP_END_ADDR           (USERSPACE_HEAP_START_ADDR + USERSPACE_HEAP_SIZE)
+
+/* 
+ * memory buddy allocator algorithm
  */
-typedef struct MemBlock {
-    Metadata metadata;  //!< Metadata of current block
-    struct MemBlock* next;      //!< Next memory block in linked list
-    struct MemBlock* prev;      //!< Previous memory block in linked list
-} MemBlock;
+#define MEM_BUDDY_MIN_BLOCK_SIZE_B  256
+#define MEM_BUDDY_MAX_BLOCKS        (2 * (USERSPACE_HEAP_SIZE / 256) - 1)
 
-/** 
- * @brief Global memory infrastructure
- */
-typedef struct {
-    MemBlock* head;  //!< First block in memory
-    MemBlock* tail;  //!< Last allocated block in memory
-} Memory;
+typedef enum node_state_t {
+    free = 0,
+    used = 1,
+    intermediate = 2,
+} node_state_t;
 
-/** 
- * @brief Heap management variables
- */
-extern char _end;              // start of heap
-extern char _estack;           // top of RAM
-extern size_t _Min_Stack_Size;      // from the script
+typedef struct mem_node_t {
+    node_state_t state; /* this describes whether if this is a leaf node, or has valid children */
+    tid_t owner;
+} mem_node_t;
 
-// Needs to be static members, so unique instance for each linkage
-// Inline to reduce function call overhead
-static inline uint8_t* heap_start(void) { return &_end; }
-static inline uint8_t* heap_end(void) { return (uint8_t*)(&_estack - _Min_Stack_Size); }
-static inline size_t heap_span_b(void) { return (size_t)(heap_end() - heap_start()); }
+typedef struct mem_allocator {
+    mem_node_t mem_nodes[MEM_BUDDY_MAX_BLOCKS];
+} mem_allocator;
 
-/** 
- * @brief User functions
- */
-int mem_init(Memory* memory);
-void* mem_alloc(size_t size, task_t requestor, Memory* memory);
-int mem_free(void* block, Memory* memory);
+/* this mem allocator is init duing kernel bootup */
 
 #endif

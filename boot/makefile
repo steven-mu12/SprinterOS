@@ -20,6 +20,10 @@ MAP_TARGET := $(BUILD_DIR)/$(TARGET).map
 
 LDSCRIPT := $(SOURCE_DIR)/startup/STM32F767ZITX_FLASH.ld
 
+MEMMAP_DIR := ../memmap
+MEMMAP_LD  := $(BUILD_DIR)/memmap.ld
+LDPATH     := $(BUILD_DIR)
+
 # Compiler Toolchain
 COMPILER  := arm-none-eabi-gcc
 OBJCOPY   := arm-none-eabi-objcopy
@@ -28,7 +32,7 @@ SIZE      := arm-none-eabi-size
 
 # Compiler Flags
 MCUFLAGS  := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard
-LDFLAGS   := $(MCUFLAGS) -T $(LDSCRIPT) \
+LDFLAGS   := $(MCUFLAGS) -T $(LDSCRIPT) -L $(LDPATH) \
              --specs=nano.specs --specs=nosys.specs \
              -Wl,--gc-sections -Wl,-Map=$(MAP_TARGET) -Wl,--print-memory-usage \
              -Wl,--start-group -lc -lm -lnosys -Wl,--end-group
@@ -49,8 +53,14 @@ $(LIST_TARGET): $(ELF_TARGET)
 size: $(ELF_TARGET)
 	$(SIZE) $<
 
+# Run the shared memory map through the C preprocessor so the linker and the C
+# code both consume memmap_config.h
+$(MEMMAP_LD): $(MEMMAP_DIR)/memmap.ld.in $(MEMMAP_DIR)/memmap_config.h
+	@mkdir -p $(dir $@)
+	$(COMPILER) -E -P -x c -I $(MEMMAP_DIR) $< -o $@
+
 # Main boot image
-$(ELF_TARGET): $(OBJS)
+$(ELF_TARGET): $(OBJS) $(MEMMAP_LD)
 	@mkdir -p $(dir $@)
 	$(COMPILER) $(MCUFLAGS) $(OBJS) $(LDFLAGS) -o $@
 
@@ -59,6 +69,7 @@ $(ELF_TARGET): $(OBJS)
 clean:
 	@rm -vf $(BUILD_DIR)/*.elf \
 	        $(BUILD_DIR)/*.bin \
+	        $(BUILD_DIR)/*.ld \
 	        $(BUILD_DIR)/*.list \
 	        $(BUILD_DIR)/*.map \
 	        $(BUILD_DIR)/*.hex

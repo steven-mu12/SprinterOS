@@ -15,10 +15,16 @@ SOURCE_DIR := src
 
 ELF_TARGET := $(BUILD_DIR)/$(TARGET).elf
 BIN_TARGET := $(BUILD_DIR)/$(TARGET).bin
+IMG_TARGET := $(BUILD_DIR)/$(TARGET).img
 LIST_TARGET := $(BUILD_DIR)/$(TARGET).list
 MAP_TARGET := $(BUILD_DIR)/$(TARGET).map
 
-LDSCRIPT := ../boot/$(SOURCE_DIR)/startup/STM32F767ZITX_FLASH.ld
+LDSCRIPT := $(SOURCE_DIR)/startup/sprinter.ld
+
+MEMMAP_DIR := ../memmap
+MEMMAP_LD  := $(BUILD_DIR)/memmap.ld
+LDPATH     := $(BUILD_DIR)
+IMAGE_SIZE := 16384
 
 # Compiler Toolchain
 COMPILER  := arm-none-eabi-gcc
@@ -28,18 +34,26 @@ SIZE      := arm-none-eabi-size
 
 # Compiler Flags
 MCUFLAGS  := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard
-LDFLAGS   := $(MCUFLAGS) -T $(LDSCRIPT) \
+LDFLAGS   := $(MCUFLAGS) -T $(LDSCRIPT) -L $(LDPATH) \
              --specs=nano.specs --specs=nosys.specs \
              -Wl,--gc-sections -Wl,-Map=$(MAP_TARGET) -Wl,--print-memory-usage \
              -Wl,--start-group -lc -lm -lnosys -Wl,--end-group
 
 # "make sprinter"
-# - Creates a flashable binary sprinterOS executive
-sprinter: $(BIN_TARGET)
+sprinter: $(IMG_TARGET)
 
 # OBJCOPY -O binary means we want binary output, input < (elf target) and output bin file
 $(BIN_TARGET): $(ELF_TARGET)
 	$(OBJCOPY) -O binary $< $@
+
+# Pad out to the size of KERNEL_IMG and stamp the signature the bootloader checks
+$(IMG_TARGET): $(BIN_TARGET)
+	@test $$(wc -c < $<) -le $$(($(IMAGE_SIZE) - 2)) || \
+	    { echo "kernel is $$(wc -c < $<) bytes, image holds $$(($(IMAGE_SIZE) - 2))"; exit 1; }
+	@dd if=/dev/zero of=$@ bs=512 count=$$(($(IMAGE_SIZE) / 512)) 2>/dev/null
+	@dd if=$< of=$@ conv=notrunc 2>/dev/null
+	@printf '\125\252' | dd of=$@ bs=1 seek=$$(($(IMAGE_SIZE) - 2)) conv=notrunc 2>/dev/null
+	@echo "$@: $(IMAGE_SIZE) bytes, $$(($(IMAGE_SIZE) / 512)) blocks, signature at $$(($(IMAGE_SIZE) - 2))"
 
 # OBJDUMP -h sprints headers, -S is "source converted to assembly dump" hybrid
 $(LIST_TARGET): $(ELF_TARGET)
@@ -49,8 +63,14 @@ $(LIST_TARGET): $(ELF_TARGET)
 size: $(ELF_TARGET)
 	$(SIZE) $<
 
+# Run the shared memory map through the C preprocessor so the linker and the C
+# code both consume memmap_config.h
+$(MEMMAP_LD): $(MEMMAP_DIR)/memmap.ld.in $(MEMMAP_DIR)/memmap_config.h
+	@mkdir -p $(dir $@)
+	$(COMPILER) -E -P -x c -I $(MEMMAP_DIR) $< -o $@
+
 # Main boot image
-$(ELF_TARGET): $(OBJS)
+$(ELF_TARGET): $(OBJS) $(MEMMAP_LD)
 	@mkdir -p $(dir $@)
 	$(COMPILER) $(MCUFLAGS) $(OBJS) $(LDFLAGS) -o $@
 
@@ -59,6 +79,8 @@ $(ELF_TARGET): $(OBJS)
 clean:
 	@rm -vf $(BUILD_DIR)/*.elf \
 	        $(BUILD_DIR)/*.bin \
+	        $(BUILD_DIR)/*.img \
+	        $(BUILD_DIR)/*.ld \
 	        $(BUILD_DIR)/*.list \
 	        $(BUILD_DIR)/*.map \
 	        $(BUILD_DIR)/*.hex

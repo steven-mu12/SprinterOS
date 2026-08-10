@@ -1,0 +1,10 @@
+#include "memmap_config.h"
+
+/* Memories definition */
+MEMORY
+{
+  FLASH       (rx)  : ORIGIN = FLASH_ORIGIN,      LENGTH = FLASH_SIZE_B
+  DTCM        (xrw) : ORIGIN = DTCM_ORIGIN,       LENGTH = DTCM_SIZE_B        /* DTCM, kernelspace after bootloader */
+  USERSPACE   (xrw) : ORIGIN = USERSPACE_ORIGIN,  LENGTH = USERSPACE_SIZE_B   /* SRAM1, userspace */
+  KERNEL_IMG  (xrw) : ORIGIN = KERNEL_IMG_ORIGIN, LENGTH = KERNEL_IMG_SIZE_B  /* SRAM2, kernel image */
+}

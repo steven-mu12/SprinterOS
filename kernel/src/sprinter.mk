@@ -6,7 +6,7 @@
 
 SOURCE_DIR = src
 BUILD_DIR  = build/obj
-INCLUDES   = -Iinc -Isrc
+INCLUDES   = -Iinc -Iinc/core -Iinc/drivers -Isrc -I../memmap
 
 DEFS      := -DDEBUG -DSTM32 -DSTM32F7 -DSTM32F767ZITx
 CFLAGS    := $(MCUFLAGS) $(DEFS) -O2 -g3 -ffunction-sections -fdata-sections -Wall -Wextra -Wpedantic \
@@ -14,12 +14,16 @@ CFLAGS    := $(MCUFLAGS) $(DEFS) -O2 -g3 -ffunction-sections -fdata-sections -Wa
 
 # --- Sources ---
 C_SRCS := \
-$(SOURCE_DIR)/core/tcb_buf.c \
+$(SOURCE_DIR)/core/mem.c \
 $(SOURCE_DIR)/main.c
+
+S_SRCS := \
+$(SOURCE_DIR)/startup/startup_sprinter.s
 
 # --- Objects and deps in build/obj ---
 OBJS := \
-$(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SRCS))
+$(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SRCS)) \
+$(patsubst $(SOURCE_DIR)/%.s, $(BUILD_DIR)/%.o, $(S_SRCS))
 
 DEPS := $(OBJS:.o=.d)
 
