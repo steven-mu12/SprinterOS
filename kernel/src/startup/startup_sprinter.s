@@ -55,7 +55,7 @@ bss_loop:
   b     bss_loop
 bss_done:
 
-  bl    main
+  bl    _main
 
 hang:
   b     hang

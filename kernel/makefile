@@ -22,19 +22,17 @@ MAP_TARGET := $(BUILD_DIR)/$(TARGET).map
 LDSCRIPT := $(SOURCE_DIR)/startup/sprinter.ld
 
 MEMMAP_DIR := ../memmap
-MEMMAP_LD  := $(BUILD_DIR)/memmap.ld
-LDPATH     := $(BUILD_DIR)
+MEMMAP_LD := $(BUILD_DIR)/memmap.ld
+LDPATH := $(BUILD_DIR)
 IMAGE_SIZE := 16384
 
-# Compiler Toolchain
 COMPILER  := arm-none-eabi-gcc
 OBJCOPY   := arm-none-eabi-objcopy
 OBJDUMP	  := arm-none-eabi-objdump
 SIZE      := arm-none-eabi-size
 
-# Compiler Flags
-MCUFLAGS  := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard
-LDFLAGS   := $(MCUFLAGS) -T $(LDSCRIPT) -L $(LDPATH) \
+MCUFLAGS := -mcpu=cortex-m7 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard
+LDFLAGS := $(MCUFLAGS) -T $(LDSCRIPT) -L $(LDPATH) \
              --specs=nano.specs --specs=nosys.specs \
              -Wl,--gc-sections -Wl,-Map=$(MAP_TARGET) -Wl,--print-memory-usage \
              -Wl,--start-group -lc -lm -lnosys -Wl,--end-group

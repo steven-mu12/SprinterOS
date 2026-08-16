@@ -2,21 +2,16 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#include "core/mem.h"
+
+/* kernel globals */
+static heap_manager userspace_heap_mgr;
+
 /*
  * SPRINTEROS KERNEL MAIN FUNCTION
  */
 int _main(void) {
-    while (1) {
+    _minit(&userspace_heap_mgr);
 
-    }
-}
-
-/*
- * SPRINTEROS KERNEL ENTRY POINT
- * need this wrapper because when we add multithreading, need a central function
- * that spins up the threads & manages them + the global resources
- */
-int main(void) {
-    // Run the main kernel functionality (no threading for now)
-    _main();
+    while (1);
 }
