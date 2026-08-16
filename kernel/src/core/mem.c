@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -18,8 +17,6 @@ static void recursively_mark(heap_manager* heap_mgr, int i, node_state_t state) 
 }
 
 void _minit(heap_manager* heap_mgr) {
-    assert(heap_mgr != NULL);
-
     heap_mgr->mem_nodes[0].state = NODE_FREE;
     recursively_mark(heap_mgr, 1, NODE_INVALID);
     recursively_mark(heap_mgr, 2, NODE_INVALID);
@@ -32,8 +29,6 @@ void _minit(heap_manager* heap_mgr) {
  * - if not then recursively go up layers. If FREE, then split down however many times needed
  */
 static address_t allocate(heap_manager* heap_mgr, tid_t requestor, int i, int layer) {
-    assert(heap_mgr != NULL);
-
     /* recusively mark children as invalid */
     heap_mgr->mem_nodes[i].state = NODE_USED;
     heap_mgr->mem_nodes[i].owner_tid = requestor;
@@ -62,7 +57,6 @@ static uint32_t split(heap_manager* heap_mgr, memsize_t req_size, uint32_t i, ui
 }
 
 address_t _malloc(heap_manager* heap_mgr, memsize_t req_size, tid_t requestor) {
-    assert(heap_mgr != NULL);
     if ((req_size == 0) || (req_size > USERSPACE_HEAP_SIZE)) {
         return _ERR;
     }
@@ -127,7 +121,6 @@ static void coalesce(heap_manager* heap_mgr, uint32_t i) {
 }
 
 int _free(heap_manager* heap_mgr, address_t target) {
-    assert(heap_mgr != NULL);
     if ((target < USERSPACE_HEAP_START_ADDR) || (target >= USERSPACE_HEAP_END_ADDR)) {
         return _ERR;
     }
