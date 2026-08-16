@@ -6,7 +6,7 @@
 
 SOURCE_DIR = src
 BUILD_DIR  = build/obj
-INCLUDES   = -Iinc
+INCLUDES   = -Iinc -I../common
 
 DEFS      := -DDEBUG -DSTM32 -DSTM32F7 -DSTM32F767ZITx -D__FPU_PRESENT=1 -D__FPU_USED=1
 CFLAGS    := $(MCUFLAGS) $(DEFS) -O2 -g3 -ffunction-sections -fdata-sections -Wall -Wextra -Wpedantic \

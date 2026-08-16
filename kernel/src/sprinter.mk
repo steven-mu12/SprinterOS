@@ -6,7 +6,7 @@
 
 SOURCE_DIR = src
 BUILD_DIR  = build/obj
-INCLUDES   = -Iinc -Iinc/core -Iinc/drivers -Isrc -I../memmap
+INCLUDES   = -Iinc -Iinc/core -Iinc/drivers -Isrc -I../memmap -I../common
 
 DEFS := -DDEBUG -DSTM32 -DSTM32F7 -DSTM32F767ZITx
 CFLAGS := $(MCUFLAGS) $(DEFS) -O2 -g3 -ffunction-sections -fdata-sections -Wall -Wextra -Wpedantic \
@@ -15,6 +15,7 @@ CFLAGS := $(MCUFLAGS) $(DEFS) -O2 -g3 -ffunction-sections -fdata-sections -Wall 
 # --- Sources ---
 C_SRCS := \
 $(SOURCE_DIR)/core/mem.c \
+$(SOURCE_DIR)/drivers/iwdg.c \
 $(SOURCE_DIR)/main.c
 
 S_SRCS := \
