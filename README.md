@@ -21,8 +21,40 @@ As a result, the OS is written with extreme care for the size and resource const
 | RAM    | 2,000 B   | 512 KB | 0.38% |
 | FLASH  | 10,904 B  | 2 MB   | 0.52% |
 
-## See it in Action
+## Try It Yourself
 
+1. Connect a SPI based SD card reader onto a SPI. make sure to edit the main bootloader to reflect this if you do! 
+```
+// change SPIx to the right SPI you are using
+if (init_spi(&spi_master, SPI1)) {
+```
+
+2. Build and load the bootloader. For STM platforms, the recommended approach is via the `st-flash` utility
+
+```
+cd boot
+
+make clean
+make boot
+
+// ensure that your device is connected
+st-flash write build/boot.bin 0x08000000
+```
+
+3. Build and load the kernel
+```
+cd kernel
+
+make clean
+make sprinter
+
+// ensure that the SD card is connected your computer, and use the sprinterloader utility
+cd ..
+cd tools
+./sprinterloader.sh <kernel_img_location> <disk>
+```
+
+4. Connect to UART (UART_1 is currently supported), you should see UART logs from boot and kernel upon boot!
 
 ## Supported Hardware
 - ARM CORTEX-M7 Based Hardware (STM32F767ZI used as dev chip)
