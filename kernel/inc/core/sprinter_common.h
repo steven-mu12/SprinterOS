@@ -8,7 +8,11 @@
 #define MAX_TASKS       16           /* max tasks system will support */
 #define STACK_SIZE      0x1000       /* 4KB static blocks for now */
 
-/* error codes */
+/*
+ * error codes
+ * we should only return _ERR if there is something horribly wrong, usually most
+ * user input based errors should just be nop
+ */
 #define _OK   0
 #define _ERR  -1
 #define _NOP  1

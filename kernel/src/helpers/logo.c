@@ -33,7 +33,7 @@ void print_logo(void) {
              USERSPACE_HEAP_START_ADDR, USERSPACE_HEAP_END_ADDR,
              USERSPACE_HEAP_SIZE / 1024);
     uart_out("[0.000000]   task stacks   %h - %h  %d KB",
-             USERSPACE_HEAP_END_ADDR, USERSPACE_HEAP_END_ADDR + USERSPACE_STACKS_SIZE_B,
+             USERSPACE_END_ADDR - USERSPACE_STACKS_SIZE_B, USERSPACE_END_ADDR,
              USERSPACE_STACKS_SIZE_B / 1024);
     uart_out("[0.000000]   kernel image  %h - %h  %d KB",
              KERNEL_IMG_ORIGIN, KERNEL_IMG_ORIGIN + KERNEL_IMG_SIZE_B,

@@ -14,9 +14,13 @@ typedef struct tcb_t {
     } status;
 
     void (*ptask)(void* args);     /* callback */
+    void* args;
     address_t stack_high;          /* stating address of stack */
     tid_t tid;                     /* task id */
     memsize_t stack_size;          /* stack size */
 } tcb_t;
+
+/* root function callback */
+void root(void *args);
 
 #endif /* __TCB_H__ */

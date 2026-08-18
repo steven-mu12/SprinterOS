@@ -15,6 +15,8 @@ CFLAGS := $(MCUFLAGS) $(DEFS) -O2 -g3 -ffunction-sections -fdata-sections -Wall 
 # --- Sources ---
 C_SRCS := \
 $(SOURCE_DIR)/core/mem.c \
+$(SOURCE_DIR)/core/tcb.c \
+$(SOURCE_DIR)/core/tcb_buf.c \
 $(SOURCE_DIR)/drivers/iwdg.c \
 $(SOURCE_DIR)/drivers/uart.c \
 $(SOURCE_DIR)/helpers/logo.c \
