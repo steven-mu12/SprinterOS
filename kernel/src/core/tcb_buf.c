@@ -37,6 +37,24 @@ static address_t fabricate_frame(tcb_t* task) {
     return (address_t)sp;
 }
 
+static uint64_t lowest_vruntime(taskbuff_t* tasks) {
+    uint64_t lowest = 0;
+    int found = 0;
+
+    for (uint32_t i = 0; i < MAX_TASKS; i++) {
+        if (tasks->buffer[i].status == STATUS_NULL) {
+            continue;
+        }
+
+        if (!found || tasks->buffer[i].vruntime < lowest) {
+            lowest = tasks->buffer[i].vruntime;
+            found = 1;
+        }
+    }
+
+    return lowest;
+}
+
 /* create task and helpers */
 static int add_task(taskbuff_t *tasks, tcb_t new_task) {
     if (tasks == NULL) {
@@ -56,6 +74,7 @@ static int add_task(taskbuff_t *tasks, tcb_t new_task) {
             new_task.stack_high = USERSPACE_END_ADDR - (i * STACK_SIZE);
             new_task.stack_size = STACK_SIZE;
             new_task.task_sp = fabricate_frame(&new_task);
+            new_task.vruntime = lowest_vruntime(tasks);
             tasks->buffer[i] = new_task;
             tasks->tasks_in_buf++;
             return _OK;
@@ -66,7 +85,7 @@ static int add_task(taskbuff_t *tasks, tcb_t new_task) {
     return _ERR;
 }
 
-int create_task(taskbuff_t* tasks, void (*callback)(void*), void* args) {
+int create_task(taskbuff_t* tasks, void (*callback)(void*), void* args, uint32_t priority) {
     if (tasks == NULL || callback == NULL) {
         return _ERR;
     }
@@ -77,6 +96,7 @@ int create_task(taskbuff_t* tasks, void (*callback)(void*), void* args) {
     tcb_t task;
     task.ptask = callback;
     task.args = args;
+    task.priority = (priority > PRIORITY_MAX) ? PRIORITY_MAX : priority;
 
     return(add_task(tasks, task));
 }

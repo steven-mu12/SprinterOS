@@ -23,37 +23,44 @@ taskbuff_t kernel_tasks;
 _Static_assert(offsetof(tcb_t, task_sp) == TCB_SP_OFFSET, "TCB_SP_OFFSET in switch.s is stale");
 
 tcb_t* _scheduler(taskbuff_t* tasks, tcb_t* current_task) {
-    /* 
-     * go through and find the next task in the TCB
-     * better algorithm incoming
-     */
-    int index = -1;
-    for (int i=0; i < MAX_TASKS; i++) {
-        if (&tasks->buffer[i] == current_task) {
-            index = i;
-            break;
-        }
-    }
-    if (index == -1) {
+    tcb_t* best = NULL;
+
+    if (tasks == NULL) {
         return NULL;
     }
 
-    for (int i = 1; i < MAX_TASKS; i++) {
-        int next = (index + i) % MAX_TASKS;
-
-        if (tasks->buffer[next].status == STATUS_READY) {
-            return (tcb_t*)&tasks->buffer[next];
+    /* whoever has had the least weighted cpu time so far wins */
+    for (uint32_t i = 0; i < MAX_TASKS; i++) {
+        volatile tcb_t* task = &tasks->buffer[i];
+        if (task->status != STATUS_READY) {
+            continue;
+        }
+        if (best == NULL || task->vruntime < best->vruntime) {
+            best = (tcb_t*)task;
         }
     }
 
-    /* if the above didnt return anything that means nothing else so run again */
-    return current_task;
+    /*
+     * the running task has to be strictly lower to be scheduled
+     */
+    if (current_task != NULL && current_task->status == STATUS_RUNNING) {
+        if (best == NULL || current_task->vruntime < best->vruntime) {
+            return current_task;
+        }
+    }
+
+    return best;
 }
 
 static char sys_timestamp[64];
 
 void sched_tick(void) {
     tcb_t* next;
+
+    /* add runtime that was just given to the current task */
+    if (current_task != NULL) {
+        current_task->vruntime += VRUNTIME_SLICE(current_task->priority);
+    }
 
     if (current_task == NULL) {
         if (kernel_tasks.buffer[0].status != STATUS_READY) {

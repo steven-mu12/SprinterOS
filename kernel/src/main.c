@@ -38,14 +38,14 @@ int _main(void) {
      * since nothing is allocated in main there is basically nothing left on the
      * kernel stack for this function
      */
-    if (create_task(&kernel_tasks, root, NULL)) {
+    if (create_task(&kernel_tasks, root, NULL, PRIORITY_DEFAULT)) {
         goto err_state;
     }
     read_system_clock(sys_timestamp, sizeof(sys_timestamp));
     uart_out("[%s] Root task initialized", sys_timestamp);
 
     /* testing task */
-    if (create_task(&kernel_tasks, init_task, NULL)) {
+    if (create_task(&kernel_tasks, init_task, NULL, PRIORITY_DEFAULT)) {
         goto err_state;
     }
 

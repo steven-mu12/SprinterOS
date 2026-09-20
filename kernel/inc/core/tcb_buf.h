@@ -14,7 +14,7 @@ typedef struct taskbuff_t {
 /**
  * @brief Task buffer user functionality
  */
-int create_task(taskbuff_t* tasks, void (*callback)(void*), void* args);
+int create_task(taskbuff_t* tasks, void (*callback)(void*), void* args, uint32_t priority);
 int remove_task(taskbuff_t *tasks, tid_t target_tid);
 int run_task(taskbuff_t *tasks, tid_t target_tid, volatile tcb_t** current_task);
 int suspend_task(taskbuff_t *tasks, tid_t target_tid, volatile tcb_t** current_task);
