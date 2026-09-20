@@ -5,6 +5,7 @@
 #include "sprinter/core/memmap.h"
 #include "sprinter/core/stm32f7.h"
 #include "sprinter/peripherals.h"
+#include "nvic.h"
 
 /** 
  * MAIN BOOT EXECUTIVE CONFIGURATIONS 
@@ -116,8 +117,8 @@ static void jump_to_sprinteros(void) {
     SysTick->CTRL = 0;
     SysTick->VAL  = 0;
     for (int i = 0; i < 8; i++) {
-        NVIC->ICER[i] = 0xFFFFFFFF;
-        NVIC->ICPR[i] = 0xFFFFFFFF;
+        NVIC_REGS->ICER[i] = 0xFFFFFFFF;
+        NVIC_REGS->ICPR[i] = 0xFFFFFFFF;
     }
 
     SCB->VTOR = OS_LOAD_ADDR; /* set vector table offset to where os is (img starts with vec table) */
