@@ -22,7 +22,8 @@ typedef struct tcb_t {
     address_t task_sp; /* current task's sp */
 } tcb_t;
 
-/* root function callback */
+/* system functions callbacks */
 void root(void *args);
+void init_task(void *args);
 
 #endif /* __TCB_H__ */

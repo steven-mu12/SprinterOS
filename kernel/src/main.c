@@ -4,6 +4,7 @@
 
 #include "stm32f7.h"
 #include "core/mem.h"
+#include "core/scheduler.h"
 #include "core/tcb.h"
 #include "core/tcb_buf.h"
 #include "drivers/iwdg.h"
@@ -17,7 +18,7 @@ static heap_manager userspace_heap_mgr;
 static char sys_timestamp[64];
 
 /* tasks */
-static taskbuff_t tasks;
+
 static volatile tcb_t *active_task;
 
 /*
@@ -37,21 +38,33 @@ int _main(void) {
      * since nothing is allocated in main there is basically nothing left on the
      * kernel stack for this function
      */
-    if (create_task(&tasks, root, NULL)) {
+    if (create_task(&kernel_tasks, root, NULL)) {
         goto err_state;
     }
-
     read_system_clock(sys_timestamp, sizeof(sys_timestamp));
     uart_out("[%s] Root task initialized", sys_timestamp);
 
+    /* testing task */
+    if (create_task(&kernel_tasks, init_task, NULL)) {
+        goto err_state;
+    }
+
     systick_setup();
+    read_system_clock(sys_timestamp, sizeof(sys_timestamp));
+    uart_out("[%s] SysTick timer initialized, context switch available", sys_timestamp);
+
+    read_system_clock(sys_timestamp, sizeof(sys_timestamp));
+    uart_out("[%s] Jumping to root task...", sys_timestamp);
+    sched_tick();
 
     /* 
-     * right now since no userspace must go here. However once we jump to root task
-     * we should never be in this loop ever
+     * if entered error state this should cause a kernel panic and trigger a restart of the system
+     * coming soon!
      */
 err_state:
-    while (1) {
-        iwdg_reset();
-    }
+    /* wait for the watchdog to reboot for now */
+    read_system_clock(sys_timestamp, sizeof(sys_timestamp));
+    uart_out("[%s] Kernel Panic", sys_timestamp);
+
+    while(1);
 }

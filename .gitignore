@@ -2,3 +2,4 @@
 boot/Debug/
 boot/boot Debug.launch
 boot/build/*
+kernel/build/*

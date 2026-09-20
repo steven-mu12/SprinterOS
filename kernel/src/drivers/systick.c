@@ -4,6 +4,7 @@
 
 #include "cortex_m7.h"
 #include "stm32f7.h"
+#include "core/scheduler.h"
 #include "drivers/timer.h"
 #include "drivers/uart.h"
 
@@ -32,5 +33,6 @@ int systick_setup(void) {
 }
 
 void SysTick_Handler(void) {
-    /* do thing rn but have pendsv set here later */
+    systick_count++;
+    sched_tick();
 }

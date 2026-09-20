@@ -6,6 +6,37 @@
 #include "core/tcb.h"
 #include "core/tcb_buf.h"
 
+#define XPSR_THUMB          0x01000000  /* bit 24, the cpu faults without it */
+#define EXC_RETURN_PSP      0xFFFFFFFD  /* return to thread mode on the psp */
+
+static void task_exit(void) {
+    while (1);
+}
+
+/*
+ * when making a new task, the stack has to look like it was interrupted so that we
+ * can actually load the context
+ */
+static address_t fabricate_frame(tcb_t* task) {
+    uint32_t* sp = (uint32_t*)task->stack_high;
+
+    /* hardware frame, popped by the cpu */
+    *(--sp) = XPSR_THUMB;
+    *(--sp) = ((uint32_t)task->ptask) & ~1U;    /* pc, bit 0 is ignored here */
+    *(--sp) = ((uint32_t)task_exit) & ~1U;      /* lr, where the task returns to */
+    *(--sp) = 0;                                /* r12 */
+    *(--sp) = 0;                                /* r3 */
+    *(--sp) = 0;                                /* r2 */
+    *(--sp) = 0;                                /* r1 */
+    *(--sp) = (uint32_t)task->args;             /* r0, the callback's argument */
+    *(--sp) = EXC_RETURN_PSP;
+    for (int i = 0; i < 8; i++) {
+        *(--sp) = 0;                            /* r11 down to r4 */
+    }
+
+    return (address_t)sp;
+}
+
 /* create task and helpers */
 static int add_task(taskbuff_t *tasks, tcb_t new_task) {
     if (tasks == NULL) {
@@ -24,6 +55,7 @@ static int add_task(taskbuff_t *tasks, tcb_t new_task) {
             new_task.status = STATUS_READY;
             new_task.stack_high = USERSPACE_END_ADDR - (i * STACK_SIZE);
             new_task.stack_size = STACK_SIZE;
+            new_task.task_sp = fabricate_frame(&new_task);
             tasks->buffer[i] = new_task;
             tasks->tasks_in_buf++;
             return _OK;
