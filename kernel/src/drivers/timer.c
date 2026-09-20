@@ -104,6 +104,9 @@ int start_system_clock(void) {
 /* reset, fires every time the timer expires */
 void TIM7_IRQHandler(void) {
     RESET_BIT(system_clock.sysclk->SR, 0);
+
+    (void)system_clock.sysclk->SR;
+
     system_clock.iteration++;
 }
 
