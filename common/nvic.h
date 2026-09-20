@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define NVIC_ADDRESS                    0xE000E100
+#include "stm32f7.h"
 
 struct nvic {
     volatile uint32_t ISER[8];

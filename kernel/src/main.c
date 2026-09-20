@@ -7,6 +7,7 @@
 #include "core/tcb.h"
 #include "core/tcb_buf.h"
 #include "drivers/iwdg.h"
+#include "drivers/systick.h"
 #include "drivers/timer.h"
 #include "drivers/uart.h"
 #include "helpers/logo.h"
@@ -31,9 +32,6 @@ int _main(void) {
     read_system_clock(sys_timestamp, sizeof(sys_timestamp));
     uart_out("[%s] SprinterOS heap manager initialized", sys_timestamp);
 
-    /* actual system simple timer for approx delays */
-    
-
     /* 
      * jump to root task (userspace stack) and we should never come back to _main
      * since nothing is allocated in main there is basically nothing left on the
@@ -45,6 +43,8 @@ int _main(void) {
 
     read_system_clock(sys_timestamp, sizeof(sys_timestamp));
     uart_out("[%s] Root task initialized", sys_timestamp);
+
+    systick_setup();
 
     /* 
      * right now since no userspace must go here. However once we jump to root task

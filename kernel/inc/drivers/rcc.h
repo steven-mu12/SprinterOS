@@ -17,6 +17,8 @@ struct rcc {
 #define RCC ((struct rcc *) RCC_ADDRESS)		/* this is the location of RCC, with all registers being 32 bits
                                                when you call any registers, it'll auto add 0x04 to offset */
 
+#define SYSCLK_HZ 180000000					/* the bootloader brings the pll here before handing over */
+
 /* helper functions */
 int sysclk_set_180mhz(void);				/* set system clock to 180MHz via PLL */
 

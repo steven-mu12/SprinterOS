@@ -21,12 +21,17 @@
                                             )
 #define READ_BITS(INPUT, BIT, MASK)			((INPUT & (MASK << BIT)) >> BIT)
 
+#define SHPR_PRIORITY(PRIO)             ((PRIO) << 4)
+
 #define HIGH							1
 #define LOW								0
 
 /** 
  * MMIO addresses
  */
+#define NVIC_ADDRESS                    0xE000E100
+#define SYSTICK_ADDRESS                 0xE000E010
+#define SCB_ADDRESS                     0xE000ED00
 #define FLASH_ADDRESS					0x40023C00
 #define RCC_ADDRESS						0x40023800
 #define GPIO_BASE_ADDRESS				0x40020000

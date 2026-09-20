@@ -18,6 +18,7 @@ $(SOURCE_DIR)/core/mem.c \
 $(SOURCE_DIR)/core/tcb.c \
 $(SOURCE_DIR)/core/tcb_buf.c \
 $(SOURCE_DIR)/drivers/iwdg.c \
+$(SOURCE_DIR)/drivers/systick.c \
 $(SOURCE_DIR)/drivers/timer.c \
 $(SOURCE_DIR)/drivers/uart.c \
 $(SOURCE_DIR)/helpers/logo.c \
