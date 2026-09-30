@@ -14,5 +14,6 @@ extern taskbuff_t kernel_tasks;
 
 tcb_t* _scheduler(taskbuff_t* tasks, tcb_t* current);
 void sched_tick(void);
+void sched_yield(void);
 
 #endif /* __SCHEDULER_H__ */

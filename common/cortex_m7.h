@@ -25,6 +25,16 @@ struct scb {
 };
 #define SCB_REGS ((struct scb *) SCB_ADDRESS)
 
+/*
+ * disable / enable interrupts in critical sections
+ */
+static inline void irq_disable(void) {
+    __asm volatile ("cpsid i" ::: "memory");
+}
+static inline void irq_enable(void) {
+    __asm volatile ("cpsie i" ::: "memory");
+}
+
 int systick_setup(void);
 void SysTick_Handler(void);
 

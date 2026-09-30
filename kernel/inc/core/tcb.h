@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include "cortex_m7.h"
 #include "sprinter_common.h"
 
 typedef struct tcb_t {
@@ -25,10 +26,11 @@ typedef struct tcb_t {
     uint64_t vruntime;             /* weighted cpu time, the lowest one runs next */
 } tcb_t;
 
-#define PRIORITY_MAX        8
-#define PRIORITY_DEFAULT    0
-#define VRUNTIME_BASE       1024
-#define VRUNTIME_SLICE(PRIO)    (VRUNTIME_BASE >> (PRIO))
+#define PRIORITY_MAX                    8
+#define PRIORITY_DEFAULT                0
+#define VRUNTIME_BASE                   1024
+#define VRUNTIME_SLICE(PRIO)            (VRUNTIME_BASE >> (PRIO))
+#define VRUNTIME_PRORATE(PRIO, USED)    ((USED) / (SYSTICK_REGS->LOAD / VRUNTIME_SLICE(PRIO)))
 
 /* system functions callbacks */
 void root(void *args);

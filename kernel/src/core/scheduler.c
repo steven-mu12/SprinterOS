@@ -89,3 +89,34 @@ void sched_tick(void) {
     /* set pendsv to indicate ready to context switch */
     SCB_REGS->ICSR = SET_BITMASK(28);
 }
+
+/* yields the current running task instead of waiting for next tick */
+void sched_yield(void) {
+    if (current_task == NULL) {
+        /* a yield should never happen when there is no current task, if it does something is horribly wrong */
+        /* should actually kernel panic here - add once mechanics added */
+        return;
+    }
+
+    /*
+     * all of this has to be atomic against systick. a switch applied half way
+     * leaves a task marked running that nothing will ever pick again, and the
+     * symptom turns up minutes later nowhere near here
+     */
+    irq_disable();
+
+    current_task->vruntime += VRUNTIME_PRORATE(current_task->priority, SYSTICK_REGS->LOAD - SYSTICK_REGS->VAL);
+    tcb_t* next = _scheduler(&kernel_tasks, (tcb_t*)current_task);
+
+    if (next != NULL && next != current_task) {
+        /* hand the slice over */
+        current_task->status = STATUS_READY;
+        next->status = STATUS_RUNNING;
+        next_task = next;
+
+        SYSTICK_REGS->VAL = 0; /* this is to reload so the next task gets the full slice */
+        SCB_REGS->ICSR = SET_BITMASK(28);
+    }
+
+    irq_enable();
+}
