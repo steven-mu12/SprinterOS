@@ -94,6 +94,9 @@ int start_system_clock(void) {
     SET_BITS(system_clock.sysclk->ARR, 0, 0xFFFF, 0xFFFF);
     SET_BIT(system_clock.sysclk->EGR, 0);
 
+    /* since system timer rn is just for timestamps and is so simple 10 should be okay */
+    SET_BITS(NVIC_REGS->IPR[TIM7_IRQ], 0, (uint8_t)SHPR_PRIORITY(10), 0xFF);
+
     SET_BIT(system_clock.sysclk->DIER, 0); /* enable system interrupt */
     NVIC_REGS->ISER[TIM7_IRQ / 32] = SET_BITMASK(TIM7_IRQ % 32);
     SET_BIT(system_clock.sysclk->CR1, 0);
