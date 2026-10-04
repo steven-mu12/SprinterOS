@@ -120,3 +120,74 @@ void sched_yield(void) {
 
     irq_enable();
 }
+
+/* block function for task */
+void sched_block(void* waiting_on) {
+    if (current_task == NULL || waiting_on == NULL) {
+        return;
+    }
+
+    /* caller itselfs must be atomic, so no need here anymore*/
+
+    current_task->vruntime += VRUNTIME_PRORATE(current_task->priority, SYSTICK_REGS->LOAD - SYSTICK_REGS->VAL);
+    current_task->status = STATUS_SUSPENDED;
+    current_task->wait_on = waiting_on;
+
+    tcb_t* next = _scheduler(&kernel_tasks, (tcb_t*)current_task);
+
+    /*
+     * should always run since root task is always ready
+     * we should also make sure that root task never blocks ever
+     */
+    if (next == NULL) {
+        current_task->status = STATUS_RUNNING;
+        current_task->wait_on = NULL;
+        return;
+    }
+
+    next->status = STATUS_RUNNING;
+    next_task = next;
+    SYSTICK_REGS->VAL = 0;
+    SCB_REGS->ICSR = SET_BITMASK(28);
+
+    /* pendsv cannot run while the caller holds the mask */
+    irq_enable();
+    irq_disable();
+}
+
+void sched_wake(void* waiting_on) {
+    if (waiting_on == NULL) {
+        return;
+    }
+
+    irq_disable();
+
+    uint64_t lowest = lowest_vruntime(&kernel_tasks);
+
+    for (uint32_t i = 0; i < MAX_TASKS; i++) {
+        volatile tcb_t* task = &kernel_tasks.buffer[i];
+        if (task->status == STATUS_SUSPENDED && task->wait_on == waiting_on) {
+            /* this is to floor so it doesn't look hog from "starved" */
+            if (task->vruntime < lowest) {
+                task->vruntime = lowest;
+            }
+            task->status = STATUS_READY;
+            task->wait_on = NULL;
+        }
+    }
+
+    /* a woken task may deserve the cpu now */
+    if (current_task != NULL && current_task->status == STATUS_RUNNING) {
+        tcb_t* next = _scheduler(&kernel_tasks, (tcb_t*)current_task);
+
+        if (next != NULL && next != current_task) {
+            current_task->status = STATUS_READY;
+            next->status = STATUS_RUNNING;
+            next_task = next;
+            SYSTICK_REGS->VAL = 0;
+            SCB_REGS->ICSR = SET_BITMASK(28);
+        }
+    }
+
+    irq_enable();
+}

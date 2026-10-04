@@ -37,24 +37,6 @@ static address_t fabricate_frame(tcb_t* task) {
     return (address_t)sp;
 }
 
-static uint64_t lowest_vruntime(taskbuff_t* tasks) {
-    uint64_t lowest = 0;
-    int found = 0;
-
-    for (uint32_t i = 0; i < MAX_TASKS; i++) {
-        if (tasks->buffer[i].status == STATUS_NULL) {
-            continue;
-        }
-
-        if (!found || tasks->buffer[i].vruntime < lowest) {
-            lowest = tasks->buffer[i].vruntime;
-            found = 1;
-        }
-    }
-
-    return lowest;
-}
-
 /* create task and helpers */
 static int add_task(taskbuff_t *tasks, tcb_t new_task) {
     if (tasks == NULL) {
@@ -83,6 +65,25 @@ static int add_task(taskbuff_t *tasks, tcb_t new_task) {
 
     /* this should never return this */
     return _ERR;
+}
+
+uint64_t lowest_vruntime(taskbuff_t* tasks) {
+    uint64_t lowest = 0;
+    int found = 0;
+
+    for (uint32_t i = 0; i < MAX_TASKS; i++) {
+        if (tasks->buffer[i].status != STATUS_READY &&
+            tasks->buffer[i].status != STATUS_RUNNING) {
+            continue;
+        }
+
+        if (!found || tasks->buffer[i].vruntime < lowest) {
+            lowest = tasks->buffer[i].vruntime;
+            found = 1;
+        }
+    }
+
+    return lowest;
 }
 
 int create_task(taskbuff_t* tasks, void (*callback)(void*), void* args, uint32_t priority) {

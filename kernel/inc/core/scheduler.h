@@ -16,4 +16,8 @@ tcb_t* _scheduler(taskbuff_t* tasks, tcb_t* current);
 void sched_tick(void);
 void sched_yield(void);
 
+/* caller must turn IRQ on and off across its condition check and the block */
+void sched_block(void* waiting_on);
+void sched_wake(void* waiting_on);
+
 #endif /* __SCHEDULER_H__ */
