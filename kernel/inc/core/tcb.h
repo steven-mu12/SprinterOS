@@ -34,5 +34,6 @@ typedef struct tcb_t {
 /* system functions callbacks */
 void root(void *args);
 void init_task(void *args);
+void shell(void *args);
 
 #endif /* __TCB_H__ */

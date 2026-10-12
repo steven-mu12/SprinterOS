@@ -4,7 +4,12 @@
 #include <stdarg.h>
 
 #include "drivers/uart.h"
+#include "core/scheduler.h"
+#include "cortex_m7.h"
+#include "nvic.h"
 #include "stm32f7.h"
+
+#define UART_RX_PRIORITY 4
 
 static int uart_write_char(char data) {
 	while (READ_BIT(UART_1->ISR, 7) == 0);			/* check TXE till high */
@@ -50,13 +55,38 @@ static int uart_output_int(int input) {
 	return 0;
 }
 
-static int uart_output_str(char* input) {
+int uart_output_str(char* input) {
 	while (*input != '\0') {
 		uart_write_char(*input);
 		input++;
 	}
 
 	return 0;
+}
+
+/*
+ * interrupt handler for RX
+ */
+static struct uart_rx_buf rx_buf;
+
+void USART1_IRQHandler(void) {
+	char character = (char)READ_BITS(UART_1->RDR, 0, 0xFF);
+	rx_buf.rx_buffer[rx_buf.tail] = character;
+	rx_buf.latest_char = character;
+	
+	/* overwrite oldest if full */
+	rx_buf.tail = (rx_buf.tail + 1) % UART_RX_BUFFER_SIZE;
+    if (rx_buf.tail == rx_buf.head) {
+        rx_buf.head = (rx_buf.head + 1) % UART_RX_BUFFER_SIZE;
+    }
+
+	/* we should never actually see this overrun unless something is higher prio */
+	if (READ_BIT(UART_1->ISR, 3)) {
+		SET_BIT(UART_1->ICR, 3);
+	}
+
+	/* wake the shell task (use address of rx_buf as key) */
+	sched_wake(&rx_buf);
 }
 
 /**
@@ -100,4 +130,31 @@ int uart_out(char* string, ...) {
 	while ((READ_BIT(UART_1->ISR, 6) == 0));
 
 	return 0;
+}
+
+int uart_output_char(char data) {
+	return uart_write_char(data);
+}
+
+int uart_rx_init(void) {
+    SET_BIT(UART_1->CR1, 5);
+
+    NVIC_REGS->IPR[USART1_IRQ] = (uint8_t)IRQ_PRIORITY(UART_RX_PRIORITY);
+    NVIC_REGS->ISER[USART1_IRQ / 32] = SET_BITMASK(USART1_IRQ % 32);
+
+    return 0;
+}
+
+char uart_read(void) {
+    char data;
+
+    irq_disable();
+		while (rx_buf.head == rx_buf.tail) {
+			sched_block(&rx_buf);
+		}
+		data = rx_buf.rx_buffer[rx_buf.head];
+		rx_buf.head = (rx_buf.head + 1) % UART_RX_BUFFER_SIZE;
+    irq_enable();
+
+    return data;
 }

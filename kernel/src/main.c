@@ -44,8 +44,12 @@ int _main(void) {
     read_system_clock(sys_timestamp, sizeof(sys_timestamp));
     uart_out("[%s] Root task initialized", sys_timestamp);
 
-    /* testing task */
-    if (create_task(&kernel_tasks, init_task, NULL, PRIORITY_DEFAULT)) {
+    /* setting up the shell task */
+    if (uart_rx_init()) {
+        goto err_state;
+    }
+
+    if (create_task(&kernel_tasks, shell, NULL, PRIORITY_DEFAULT)) {
         goto err_state;
     }
 

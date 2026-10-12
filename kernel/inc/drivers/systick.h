@@ -7,7 +7,7 @@
 
 #define SYSTICK_CLK_HZ          (SYSCLK_HZ / 8)
 #define SYSTICK_RELOAD_MS(MS)   ((((SYSTICK_CLK_HZ) / 1000) * (MS)) - 1)
-#define SYSTICK_TIMESLICE_MS    100
+#define SYSTICK_TIMESLICE_MS    5
 
 int systick_setup(void);
 

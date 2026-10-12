@@ -20,6 +20,8 @@ struct nvic {
 };
 #define NVIC_REGS ((struct nvic *) NVIC_ADDRESS)
 
+#define IRQ_PRIORITY(PRIO)      ((PRIO) << 4)
+
 /* irq numbers (RM0410 table 46), add as drivers need them */
 #define USART1_IRQ                      37
 #define TIM6_DAC_IRQ                    54
