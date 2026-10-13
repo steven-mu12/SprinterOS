@@ -12,6 +12,7 @@
 #include "drivers/timer.h"
 #include "drivers/uart.h"
 #include "helpers/logo.h"
+#include "shell/shell.h"
 
 /* kernel globals */
 static heap_manager userspace_heap_mgr;

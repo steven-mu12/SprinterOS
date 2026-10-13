@@ -23,6 +23,8 @@ $(SOURCE_DIR)/drivers/systick.c \
 $(SOURCE_DIR)/drivers/timer.c \
 $(SOURCE_DIR)/drivers/uart.c \
 $(SOURCE_DIR)/helpers/logo.c \
+$(SOURCE_DIR)/shell/commands.c \
+$(SOURCE_DIR)/shell/shell.c \
 $(SOURCE_DIR)/main.c
 
 S_SRCS := \
